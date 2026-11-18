@@ -1,0 +1,64 @@
+name: Build Android APK
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: android
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Read version
+        id: v
+        run: |
+          V=$(node -p "require('./release.json').version")
+          echo "version=$V" >> $GITHUB_OUTPUT
+          IFS=. read MA MI PA <<< "$V"
+          echo "code=$((MA*10000 + MI*100 + PA))" >> $GITHUB_OUTPUT
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Build signed APK
+        working-directory: android
+        env:
+          VERSION_NAME: ${{ steps.v.outputs.version }}
+          VERSION_CODE: ${{ steps.v.outputs.code }}
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          ./gradlew assembleRelease --no-daemon 2>&1 | tee ../build.log
+          cp app/build/outputs/apk/release/app-release.apk ../rihlat-siraj.apk
+      - name: Report build failure
+        if: failure()
+        run: |
+          tail -200 build.log > /tmp/fail.log || echo "no log" > /tmp/fail.log
+          git config user.name ci && git config user.email ci@example.com
+          git checkout --orphan ci-fail && git rm -rqf --cached . && cp /tmp/fail.log build-fail.log && git add -f build-fail.log && git commit -qm "build failure log"
+          git push -qf origin HEAD:refs/heads/ci-log/${{ steps.v.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rihlat-siraj-apk
+          path: rihlat-siraj.apk
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.v.outputs.version }}
+          name: رحلة سراج ${{ steps.v.outputs.version }}
+          body: "رحلة سراج لأندرويد — حمّل ملف rihlat-siraj.apk وثبّته. تم تصميم وتطوير التطبيق بواسطة Mohamed Eldawly"
+          files: rihlat-siraj.apk
+          make_latest: true
+          overwrite_files: true
