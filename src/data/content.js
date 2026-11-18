@@ -102,5 +102,5 @@ export const LESSONS = {
   },
 };
 export const lessonOf = (id) => LESSONS[id];
-import { STORIES } from './stories';
+import { STORIES } from './stories.js';
 export const ITEM = (id) => LESSONS[id] || STORIES[id];

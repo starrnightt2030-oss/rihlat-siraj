@@ -1,12 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true }, lastSeen: 0 };
+const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true, quran: true }, lastSeen: 0, days: [], gift: '' };
 
 export const useStore = create(persist((set, get) => ({
   ...blank,
   setProfile: (profile) => set({ profile }),
   touch: () => set({ lastSeen: Date.now() }),
+  visit: (d) => set((s) => (s.days.includes(d) ? {} : { days: [...s.days, d].slice(-60) })),
+  takeGift: (d) => set((s) => ({ gift: d, light: s.light + 2 })),
   setSetting: (k, v) => set((s) => ({ settings: { ...s.settings, [k]: v } })),
   // يحفظ أفضل نتيجة للدرس ويضيف المكافآت مرة واحدة بس
   complete: (id, stars, reward = {}) => {

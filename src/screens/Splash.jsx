@@ -11,7 +11,7 @@ import { A } from '../lib/asset';
 export default function Splash({ go }) {
   const profile = useStore((s) => s.profile);
   const line = profile ? `أهلًا يا ${profile.name}! مستنيك نكمّل رحلتنا` : 'بسم الله… يلا ننوّرها!';
-  const start = () => { sfx.whoosh(); say(line); go(profile ? 'island' : 'onboard'); };
+  const start = () => { sfx.whoosh(); say('بسم الله… يلا ننوّرها!'); go(profile ? 'island' : 'onboard'); };
   return (
     <div className="screen" style={{ alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' }}>
       <Sky />
@@ -24,7 +24,7 @@ export default function Splash({ go }) {
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Bubble tail="b" style={{ fontSize: 22, marginBottom: 8 }}>{line}</Bubble>
         <motion.div initial={{ y: 200, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 120, damping: 12, delay: 0.3 }}>
-          <Siraj pose="wave" size={250} onTap={() => say(line)} />
+          <Siraj pose="wave" size={250} onTap={() => say('بسم الله… يلا ننوّرها!')} />
         </motion.div>
       </div>
       <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>

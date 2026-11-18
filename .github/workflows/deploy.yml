@@ -3,6 +3,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Generate Siraj voice']
+    types: [completed]
 permissions:
   contents: read
   pages: write

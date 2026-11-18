@@ -1,0 +1,30 @@
+name: Generate Siraj voice
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: tts
+  cancel-in-progress: false
+jobs:
+  tts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Generate audio with Azure
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+        run: node scripts/tts.mjs
+      - name: Commit audio
+        run: |
+          git config user.name "rihlat-bot"
+          git config user.email "rihlat-bot@users.noreply.github.com"
+          git add public/audio/voice
+          git diff --cached --quiet || git commit -m "توليد صوت سراج"
+          git pull --rebase
+          git push

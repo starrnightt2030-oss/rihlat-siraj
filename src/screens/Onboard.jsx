@@ -16,9 +16,10 @@ export default function Onboard({ go, back }) {
   const [p, setP] = useState({ name: '', gender: '', age: '', buddy: 'siraj' });
   const set = (k, v) => { sfx.pop(); setP((o) => ({ ...o, [k]: v })); };
   const lines = ['اسمك إيه يا بطل؟', `أهلًا يا ${p.name || 'بطل'}! انت ولد ولا بنت؟`, 'عندك كام سنة؟', 'مين يحب يكون رفيقك في الرحلة؟'];
+  const spoken = ['اسمك إيه يا بطل؟', 'انت ولد ولا بنت؟', 'عندك كام سنة؟', 'مين يحب يكون رفيقك في الرحلة؟'];
   const ok = [p.name.trim().length > 0, !!p.gender, !!p.age, !!p.buddy][step];
   const next = () => {
-    if (step < 3) { const n = step + 1; setStep(n); say(lines[n]); return; }
+    if (step < 3) { const n = step + 1; setStep(n); say(spoken[n]); return; }
     setProfile({ ...p, name: p.name.trim() }); sfx.good(); say('بسم الله… يلا ننوّرها!'); go('island');
   };
   const pose = ['wave', 'happy', 'think', 'jump'][step];
@@ -34,7 +35,7 @@ export default function Onboard({ go, back }) {
       </div>
 
       <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 6, minHeight: 170 }}>
-        <Siraj pose={pose} size={150} onTap={() => say(lines[step])} />
+        <Siraj pose={pose} size={150} onTap={() => say(spoken[step])} />
         <Bubble tail="r" style={{ flex: 1, fontSize: 22, marginBottom: 30 }}>{lines[step]}</Bubble>
       </div>
 

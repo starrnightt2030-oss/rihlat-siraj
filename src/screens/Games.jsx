@@ -8,6 +8,7 @@ import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say } from '../lib/voice';
+import { OrderGame, FillGame, MatchGame } from './LearnGames';
 
 const FACES = ['moon', 'lantern', 'mosque', 'camel', 'dates', 'palm', 'siraj', 'bashir', 'jug', 'tasbih', 'rug', 'mushaf'];
 const PUZZLES = [{ id: 'harbor', t: 'الميناء' }, { id: 'mosque', t: 'المسجد' }, { id: 'garden', t: 'البستان' }];
@@ -16,11 +17,14 @@ const shuffle = (a) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--
 export default function Games({ arg, go, back }) {
   const age = useStore((s) => s.profile?.age || '7-9');
   if (arg === 'memory') return <Memory age={age} back={back} />;
+  if (arg === 'order') return <OrderGame age={age} back={back} />;
+  if (arg === 'fill') return <FillGame back={back} />;
+  if (arg === 'match') return <MatchGame age={age} back={back} />;
   if (arg && arg.startsWith('puzzle-')) return <Puzzle id={arg.slice(7)} age={age} back={back} />;
   return (
     <div className="screen with-nav" style={{ gap: 14 }}>
       <Sky tone="lilac" />
-      <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h1 style={{ fontSize: 32, fontWeight: 800 }}>سوق الألعاب</h1><LightChip /></div>
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h1 style={{ fontSize: 32, fontWeight: 800 }}>الألعاب</h1><LightChip /></div>
       <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => { sfx.pop(); go('games', 'memory'); }} className="card"
         style={{ position: 'relative', padding: 12, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'right', borderColor: '#9D7CFF' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 44px)', gap: 4 }}>
@@ -28,6 +32,17 @@ export default function Games({ arg, go, back }) {
         </div>
         <div style={{ flex: 1 }}><div style={{ fontSize: 24, fontWeight: 800 }}>لعبة الذاكرة</div><div style={{ color: '#5D6CA0', fontWeight: 700 }}>اقلب الكروت ولاقي الأزواج</div></div>
       </motion.button>
+      <h2 style={{ position: 'relative', fontSize: 22, fontWeight: 800 }}>ألعاب نتعلّم بيها</h2>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {[{ id: 'order', t: 'رتّب الوضوء', d: 'حط الخطوات بالترتيب', img: 'games/memory/jug', c: '#2FB383' }, { id: 'fill', t: 'كمّل الآية', d: 'اختار الكلمة الناقصة واسمع الشيخ', img: 'games/memory/mushaf', c: '#9B7BF2' }, { id: 'match', t: 'وصّل الذكر بوقته', d: 'كل ذكر وإمتى بنقوله', img: 'games/memory/tasbih', c: '#FF89B5' }].map((g) => (
+          <motion.button key={g.id} type="button" whileTap={{ scale: 0.97 }} onClick={() => { sfx.pop(); go('games', g.id); }} className="card"
+            style={{ border: 0, padding: 10, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'right', fontFamily: 'inherit', color: '#26336B', boxShadow: `0 5px 0 ${g.c}44, 0 10px 20px rgba(38,51,107,.08)` }}>
+            <img src={A(g.img)} alt="" style={{ width: 62, height: 62, borderRadius: 18, objectFit: 'cover' }} />
+            <div style={{ flex: 1 }}><div style={{ fontSize: 20, fontWeight: 800 }}>{g.t}</div><div style={{ fontSize: 14, fontWeight: 600, color: '#6D7896' }}>{g.d}</div></div>
+            <span style={{ width: 44, height: 44, borderRadius: 22, background: g.c, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5L7 12l9 7z" fill="#fff" /></svg></span>
+          </motion.button>
+        ))}
+      </div>
       <h2 style={{ position: 'relative', fontSize: 22, fontWeight: 800 }}>البازل</h2>
       <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
         {PUZZLES.map((p) => (
@@ -39,7 +54,7 @@ export default function Games({ arg, go, back }) {
       </div>
       <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 4, marginTop: 6 }}>
         <img src={A('characters/mishmish/play')} alt="مشمش" style={{ width: 120, objectFit: 'contain' }} />
-        <Bubble tail="r" style={{ flex: 1, marginBottom: 14 }}>مشمش بيحب الألعاب! كل لعبة بتكسبها بتزوّد نور الجزيرة.</Bubble>
+        <Bubble tail="r" style={{ flex: 1, marginBottom: 14 }}>مشمش بيحب الألعاب! كل لعبة بتكسبها بتزوّد نور الجرة.</Bubble>
       </div>
     </div>
   );

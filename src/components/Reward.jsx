@@ -20,11 +20,12 @@ export function Confetti({ n = 40 }) {
   );
 }
 
-export default function Reward({ result, region, onHome, onRegion, title }) {
+export default function Reward({ result, region, onHome, onRegion, title, chest }) {
   const { stars, gain, light, sticker, spark } = result;
   const sp = spark && SPARKS.find((s) => s.id === spark);
   useEffect(() => {
     sfx.good(); say(`برافو! نوّرت ${region?.name || 'الجزيرة'}`);
+    if (chest) setTimeout(() => { sfx.sparkle(); }, 1700);
     [0, 1, 2].forEach((k) => k < stars && setTimeout(() => sfx.star(k), 500 + k * 350));
   }, []);
   return (
@@ -40,7 +41,12 @@ export default function Reward({ result, region, onHome, onRegion, title }) {
             style={{ width: k === 1 ? 96 : 76, height: k === 1 ? 96 : 76, marginBottom: k === 1 ? 14 : 0, opacity: k < stars ? 1 : 0.45 }} />
         ))}
       </div>
-      <Siraj pose="party" size={170} style={{ position: 'relative' }} />
+      {chest ? (
+        <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1], rotate: [0, -8, 8, 0] }} transition={{ delay: 1.6, duration: 0.8 }} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <img src={A('rewards/chest')} alt="" style={{ width: 160, height: 130, objectFit: 'contain', filter: 'drop-shadow(0 0 24px rgba(255,255,255,.9))' }} />
+          <span className="ribbon" style={{ '--c': '#FF7E6B', fontSize: 18 }}>الكنز اتفتح!</span>
+        </motion.div>
+      ) : <Siraj pose="party" size={170} style={{ position: 'relative' }} />}
       <div style={{ position: 'relative', display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
         {gain > 0 && <Gift img="rewards/star" t={`+${ar(gain)} نجوم`} d={1.4} />}
         {light > 0 && <Gift img="rewards/jar" t={`+${ar(light)} نور`} d={1.6} />}

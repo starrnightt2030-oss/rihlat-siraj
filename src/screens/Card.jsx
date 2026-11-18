@@ -8,12 +8,14 @@ import { cardById, ALL_CARDS } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush } from '../lib/voice';
+import { say, hush, recite } from '../lib/voice';
+import { stepLine } from '../data/speech';
 
 const tashkeel = (t) => (t.match(/[\u064B-\u0652]/g) || []).length >= 3;
 const TILE = ['#FFF3D6', '#E6F6EE', '#FFEAF2', '#E6F0FF', '#F1ECFF', '#E3F6FA'];
 const TILE_C = ['#F5A623', '#2FB383', '#E0609E', '#3A8FE0', '#7B5CE0', '#1F8FA6'];
-const spoken = (s) => s.k === 'say' ? s.t : s.k === 'ayah' ? s.mean || '' : s.k === 'hadith' ? s.mean || s.t : s.k === 'tips' ? s.items.join('، ') : s.k === 'grid' ? s.title : s.k === 'surah' ? 'سورة ' + s.name : '';
+const audOf = (s) => s.k === 'ayah' && s.aud ? [s.aud] : s.k === 'surah' ? s.verses.map((_, k) => s.sura + String(k + 1).padStart(3, '0')) : [];
+const speak = (s) => say(stepLine(s), audOf(s));
 
 export default function Card({ arg, go, back }) {
   const c = cardById(arg) || ALL_CARDS[0];
@@ -26,7 +28,7 @@ export default function Card({ arg, go, back }) {
   const total = c.steps.length + 1;
   const pos = phase === 'learn' ? i + 1 : total;
   useEffect(() => () => hush(), []);
-  useEffect(() => { if (phase === 'learn') say(spoken(step)); else if (phase === 'quiz') say(c.quiz.q); }, [i, phase]);
+  useEffect(() => { if (phase === 'learn') speak(step); else if (phase === 'quiz') say(c.quiz.q); }, [i, phase]);
 
   const next = () => { sfx.whoosh(); if (i < c.steps.length - 1) setI(i + 1); else setPhase('quiz'); };
   const answer = (k) => {
@@ -95,13 +97,13 @@ export default function Card({ arg, go, back }) {
 
       {phase === 'learn' && (
         <div style={{ position: 'relative', display: 'flex', gap: 10, alignItems: 'center' }}>
-          <IconBtn icon={I.sound} label="اسمع تاني" sound="tap" color={u.dark} onClick={() => say(spoken(step))} style={{ width: 60, height: 60, borderRadius: 30 }} />
+          <IconBtn icon={I.sound} label="اسمع تاني" sound="tap" color={u.dark} onClick={() => speak(step)} style={{ width: 60, height: 60, borderRadius: 30 }} />
           {i > 0 && <IconBtn icon={I.back} label="اللي قبله" onClick={() => setI(i - 1)} style={{ width: 60, height: 60, borderRadius: 30, transform: 'scaleX(-1)' }} />}
           <Btn className="block" sound="" onClick={next} style={{ flex: 1, '--c': u.color, '--d': u.dark, '--t': '#fff', minHeight: 62 }}>{i < c.steps.length - 1 ? 'التالي' : 'يلا نجرّب!'}</Btn>
         </div>
       )}
 
-      {phase === 'reward' && res && <Reward result={res} region={{ name: u.title }} onHome={() => go('island')} onRegion={() => go('unit', u.id)} />}
+      {phase === 'reward' && res && <Reward result={res} chest={u.cards[u.cards.length - 1].id === c.id} region={{ name: u.title }} onHome={() => go('island')} onRegion={() => go('unit', u.id)} />}
     </div>
   );
 }
@@ -126,6 +128,7 @@ function Step({ s, u }) {
           <span className="ribbon" style={{ '--c': ay ? '#FF89B5' : '#2FB383', fontSize: 15 }}>{ay ? 'ربنا قال في القرآن' : 'النبي ﷺ علّمنا'}</span>
           <div className="ayah" style={{ fontSize: ay ? 32 : 26, color: ay ? '#B03A64' : '#1F7A55', margin: '10px 0 4px' }}>{ay ? `﴿${s.t}﴾` : `«${s.t}»`}</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#7A6A70' }}>{s.ref}</div>
+          {s.aud && <button type="button" onClick={() => recite([s.aud])} style={{ marginTop: 8, border: 0, borderRadius: 16, padding: '4px 14px', background: '#fff', color: '#B03A64', fontFamily: 'inherit', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 3px 0 #F2C4D6' }}>اسمع الآية من الشيخ</button>}
         </div>
         {s.mean && (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
@@ -167,17 +170,18 @@ function Step({ s, u }) {
   );
   if (s.k === 'surah') return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ textAlign: 'center' }}><span className="ribbon" style={{ '--c': u.color, fontSize: 18 }}>سورة {s.name}</span></div>
+      <div style={{ textAlign: 'center' }}><span className="ribbon" style={{ '--c': u.color, fontSize: 18 }}>سورة {s.name}</span><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896', marginTop: 4 }}>دوس على أي آية تسمعها وكرّرها</div></div>
       {s.name !== 'الفاتحة' && <div className="ayah" style={{ textAlign: 'center', fontSize: 20, color: '#6E4FD0' }}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>}
       {s.verses.map(([v, m], k) => (
-        <motion.div key={k} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: k * 0.08 }} className="card"
-          style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, background: TILE[k % 6], boxShadow: `0 4px 0 ${TILE_C[k % 6]}33` }}>
+        <motion.button type="button" key={k} onClick={() => { sfx.tap(); recite([s.sura + String(k + 1).padStart(3, '0')]); }} aria-label={'اسمع الآية ' + (k + 1)} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: k * 0.08 }} className="card"
+          style={{ border: 0, cursor: 'pointer', textAlign: 'right', fontFamily: 'inherit', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, background: TILE[k % 6], boxShadow: `0 4px 0 ${TILE_C[k % 6]}33` }}>
           <span className="num" style={{ '--c': TILE_C[k % 6], width: 30, height: 30, fontSize: 15 }}>{ar(k + 1)}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="ayah" style={{ fontSize: 23, color: '#26336B', lineHeight: 1.7 }}>{v}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: TILE_C[k % 6] }}>{m}</div>
           </div>
-        </motion.div>
+          <Icon d={I.sound} size={22} color={TILE_C[k % 6]} />
+        </motion.button>
       ))}
     </div>
   );

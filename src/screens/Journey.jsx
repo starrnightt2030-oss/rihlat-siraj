@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import Gift from '../components/Gift';
+import { today } from '../data/gifts';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sky from '../components/Sky';
 import Siraj, { BUDDY } from '../components/Siraj';
@@ -12,7 +14,10 @@ import { say } from '../lib/voice';
 const ZIG = [0, 78, 0, -78];
 
 export default function Journey({ go }) {
-  const { profile, done, stars, light } = useStore();
+  const { profile, done, stars, light, days, gift, visit, takeGift } = useStore();
+  const d0 = today();
+  useEffect(() => { visit(d0); }, []);
+  const streak = (() => { let n = 0; const t = new Date(); for (;;) { const d = new Date(t.getFullYear(), t.getMonth(), t.getDate() - n); if (days.includes(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`) || n === 0) n++; else break; if (n > 365) break; } return n; })();
   const cur = nextCard(done);
   const curRef = useRef(null);
   const [toast, setToast] = useState('');
@@ -20,7 +25,7 @@ export default function Journey({ go }) {
   const hello = cur ? `يلا يا ${profile?.name}! «${cur.title}» مستنياك` : `ما شاء الله يا ${profile?.name}! خلّصت الرحلة كلها`;
   useEffect(() => { curRef.current?.scrollIntoView({ block: 'center' }); }, []);
   const open = (c) => {
-    if (!isOpen(c.id, done)) { sfx.soft(); setToast('خلّص اللي قبلها الأول'); setTimeout(() => setToast(''), 1600); return; }
+    if (!isOpen(c.id, done)) { sfx.soft(); setToast('خلّص اللي قبلها الأول'); say('خلّص اللي قبلها الأول'); setTimeout(() => setToast(''), 1600); return; }
     sfx.pop(); go(c.story ? 'stories' : 'card', c.id);
   };
   const doneCount = ALL_CARDS.filter((c) => c.id in done).length;
@@ -37,6 +42,7 @@ export default function Journey({ go }) {
           <div style={{ fontSize: 14, fontWeight: 700, color: '#3A6FC4' }}>{hour < 12 ? 'صباح النور' : 'مساء النور'}</div>
           <div style={{ fontSize: 22, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>يا {profile?.name}</div>
         </div>
+        <span className="chip" aria-label={`${streak} أيام ورا بعض`}><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c3 4 7 6 7 12a7 7 0 0 1-14 0c0-3 1.5-5 3-6 0 2 1 3 2 3 0-4 0-6 2-9z" fill="#FF8A4C" /><path d="M12 12c1.6 1.6 3 3 3 5a3 3 0 0 1-6 0c0-1.5 1.4-3 3-5z" fill="#FFD25A" /></svg>{ar(streak)}</span>
         <span className="chip"><img src={A('rewards/jar')} alt="" style={{ width: 22, height: 26, objectFit: 'contain' }} />{ar(light)}</span>
         <span className="chip"><img src={A('rewards/star')} alt="" style={{ width: 26, height: 26 }} />{ar(stars)}</span>
       </header>
@@ -85,7 +91,7 @@ export default function Journey({ go }) {
                     <span style={{ fontSize: 15, fontWeight: 800, color: locked ? '#8792AE' : '#26336B', background: '#fff', borderRadius: 12, padding: '0 10px', boxShadow: '0 2px 0 #F3E6CC' }}>{c.title}</span>
                     {isCur && (
                       <div style={{ position: 'absolute', top: 6, [ZIG[i % 4] > 0 ? 'right' : 'left']: 96, pointerEvents: 'auto' }}>
-                        <Siraj pose="point" size={96} onTap={() => say(hello)} style={{ transform: ZIG[i % 4] > 0 ? 'none' : 'scaleX(-1)' }} />
+                        <Siraj pose="point" size={96} onTap={() => say(cur ? 'يلا! الكارت اللي عليه الدور مستنيك' : 'ما شاء الله! خلّصت الرحلة كلها')} style={{ transform: ZIG[i % 4] > 0 ? 'none' : 'scaleX(-1)' }} />
                       </div>
                     )}
                   </div>
@@ -101,6 +107,7 @@ export default function Journey({ go }) {
       })}
       <div style={{ height: 40 }} />
 
+      {gift !== d0 && <Gift onTake={() => takeGift(d0)} />}
       <AnimatePresence>
         {toast && <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} role="status"
           style={{ position: 'fixed', bottom: 110, left: '50%', marginLeft: -110, width: 220, textAlign: 'center', background: '#26336B', color: '#fff', borderRadius: 18, padding: '8px 12px', fontWeight: 800, zIndex: 30 }}>{toast}</motion.div>}

@@ -44,13 +44,26 @@ export default function Parent({ go, back }) {
               </div>
             ))}
           </div>
+          <div className="card" style={{ position: 'relative', padding: 16 }}>
+            <h2 style={{ fontSize: 19, fontWeight: 800, marginBottom: 8 }}>آخر ٧ أيام</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6, textAlign: 'center' }}>
+              {Array.from({ length: 7 }).map((_, k) => {
+                const t = new Date(); const d = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 6 + k);
+                const on = (s.days || []).includes(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+                return <div key={k} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 34, height: 34, borderRadius: 17, background: on ? '#2FB383' : '#EEF1F7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{on ? '✓' : ''}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#6D7896' }}>{['أحد', 'اتنين', 'تلات', 'أربع', 'خميس', 'جمعة', 'سبت'][d.getDay()]}</span></div>;
+              })}
+            </div>
+          </div>
           <div className="card" style={{ position: 'relative', padding: '4px 16px' }}>
             <Toggle k="sound" t="أصوات التطبيق" />
             <Toggle k="voice" t="صوت سراج (قراءة الكلام)" />
+            <Toggle k="quran" t="تلاوة الشيخ للآيات" />
             <Toggle k="motion" t="الحركة والمؤثرات" />
           </div>
           <div className="card" style={{ position: 'relative', padding: 14, fontSize: 15, lineHeight: 1.7, color: '#5D6CA0', fontWeight: 600 }}>
-            المحتوى الشرعي مكتوب بلغة مبسّطة للأطفال، والآيات منقولة بنصّها مع ذكر السورة ورقم الآية. التطبيق لا يجسّد الأنبياء ولا الصحابة، ولا يعاقب الطفل على الغياب.
+            المحتوى الشرعي مكتوب بلغة مبسّطة للأطفال، والآيات منقولة بنصّها مع ذكر السورة ورقم الآية. الأحاديث مكتوب معاها مصدرها، والتلاوة بصوت الشيخ مشاري العفاسي. التطبيق لا يجسّد الأنبياء ولا الصحابة ولا الملائكة، ولا يعاقب الطفل على الغياب.
           </div>
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Btn className="block" tone="white" onClick={() => { s.setProfile(null); go('onboard'); }}>تغيير بيانات الطفل</Btn>

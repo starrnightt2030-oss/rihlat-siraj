@@ -17,7 +17,7 @@ export default function Album() {
       <h1 style={{ position: 'relative', fontSize: 32, fontWeight: 800 }}>كنوزي</h1>
 
       <div className="card" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: 14, background: 'radial-gradient(circle at 85% 40%, #FFF3B8, #fff 65%)' }}>
-        <motion.img src={A('rewards/jar')} alt="جرة النور" className="glow" whileTap={{ scale: 0.9, rotate: -6 }} onClick={() => { sfx.sparkle(); say(`جرتك فيها ${light} نور`); }} style={{ width: 96, height: 110, objectFit: 'contain', cursor: 'pointer' }} />
+        <motion.img src={A('rewards/jar')} alt="جرة النور" className="glow" whileTap={{ scale: 0.9, rotate: -6 }} onClick={() => { sfx.sparkle(); say('كل درس وحكاية بيزوّدوا نور الجرة'); }} style={{ width: 96, height: 110, objectFit: 'contain', cursor: 'pointer' }} />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#5D6CA0' }}>جرة النور</div>
           <div style={{ fontSize: 40, fontWeight: 800, color: '#E39400', lineHeight: 1.1 }}>{ar(light)} نور</div>
