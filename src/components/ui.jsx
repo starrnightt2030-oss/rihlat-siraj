@@ -41,7 +41,7 @@ export function Bubble({ children, tail = 'r', style }) {
 }
 
 const TABS = [
-  { id: 'island', name: 'الجزيرة', img: 'stickers/lighthouse' },
+  { id: 'island', name: 'رحلتي', img: 'characters/siraj/face_happy' },
   { id: 'stories', name: 'الحكايات', img: 'stickers/whale' },
   { id: 'games', name: 'الألعاب', img: 'characters/lantern/lit' },
   { id: 'album', name: 'كنوزي', img: 'rewards/chest' },

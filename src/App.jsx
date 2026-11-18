@@ -3,9 +3,9 @@ import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { useStore } from './store';
 import Splash from './screens/Splash';
 import Onboard from './screens/Onboard';
-import Island from './screens/Island';
-import Region from './screens/Region';
-import Lesson from './screens/Lesson';
+import Journey from './screens/Journey';
+import Unit from './screens/Unit';
+import Card from './screens/Card';
 import Album from './screens/Album';
 import Games from './screens/Games';
 import Stories from './screens/Stories';
@@ -30,8 +30,8 @@ export default function App() {
   if (!profile && !['splash', 'onboard', 'parent'].includes(name)) name = 'splash';
   const tabs = ['island', 'stories', 'games', 'album'].includes(name);
   const P = { go, back, arg };
-  const screens = { splash: Splash, onboard: Onboard, island: Island, region: Region, lesson: Lesson, album: Album, games: Games, stories: Stories, parent: Parent };
-  const S = screens[name] || Island;
+  const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent };
+  const S = screens[name] || Journey;
 
   return (
     <MotionConfig reducedMotion={motionOn ? 'user' : 'always'}>

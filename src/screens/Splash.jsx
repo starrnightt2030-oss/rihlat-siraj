@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import Sky from '../components/Sky';
-import Hill from '../components/Hill';
 import Logo from '../components/Logo';
 import Siraj from '../components/Siraj';
 import { Btn, Bubble, Icon, I } from '../components/ui';
@@ -16,7 +15,6 @@ export default function Splash({ go }) {
   return (
     <div className="screen" style={{ alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' }}>
       <Sky />
-      <Hill />
       <img src={A('characters/lantern/lit')} alt="" aria-hidden="true" className="float" style={{ position: 'absolute', bottom: 110, left: 18, width: 70, animationDelay: '-1s' }} />
       <img src={A('characters/bashir/fly')} alt="" aria-hidden="true" className="float" style={{ position: 'absolute', top: 150, left: 12, width: 92, animationDelay: '-2s' }} />
       <div style={{ position: 'relative', marginTop: 34, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>

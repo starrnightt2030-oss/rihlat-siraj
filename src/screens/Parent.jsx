@@ -2,8 +2,7 @@ import { useMemo, useState } from 'react';
 import Sky from '../components/Sky';
 import { Btn, IconBtn, I } from '../components/ui';
 import { useStore } from '../store';
-import { LESSONS } from '../data/content';
-import { STORIES } from '../data/stories';
+import { ALL_CARDS } from '../data/units';
 import { ar } from '../lib/asset';
 
 export default function Parent({ go, back }) {
@@ -12,7 +11,7 @@ export default function Parent({ go, back }) {
   const [ans, setAns] = useState('');
   const [open, setOpen] = useState(false);
   const [sure, setSure] = useState(false);
-  const all = { ...LESSONS, ...STORIES };
+  const all = Object.fromEntries(ALL_CARDS.map((c) => [c.id, c]));
   const Toggle = ({ k, t }) => (
     <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 4px', borderBottom: '2px solid #F1F4FA', fontSize: 18, fontWeight: 700 }}>
       {t}

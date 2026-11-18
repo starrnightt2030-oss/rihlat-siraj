@@ -5,7 +5,7 @@ import Siraj from '../components/Siraj';
 import Reward from '../components/Reward';
 import { Btn, Bubble, IconBtn, Icon, I, StarsChip } from '../components/ui';
 import { STORIES } from '../data/stories';
-import { REGIONS } from '../data/content';
+import { cardById } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
@@ -62,7 +62,7 @@ function Player({ id, go, back }) {
   const [q, setQ] = useState(0), [miss, setMiss] = useState(0), [pick, setPick] = useState(null);
   const [result, setResult] = useState(null);
   const sc = S.scenes[i];
-  const region = REGIONS.find((r) => r.lessons.includes(id));
+  const cu = cardById(id)?.unit; const region = cu ? { name: cu.title } : { name: 'بحر الحكايات' };
   const line = choice ? choice.res : sc.t + (sc.ayah ? ' ' + sc.ayah : '');
   useEffect(() => { if (phase === 'story') say(line); if (phase === 'moral') say(S.moral); if (phase === 'quiz') say(S.quiz[q].q); }, [i, phase, choice, q]);
   useEffect(() => () => hush(), []);
@@ -143,7 +143,7 @@ function Player({ id, go, back }) {
         </motion.div>
       )}
 
-      {phase === 'reward' && result && <Reward result={result} region={region} title="حكاية حلوة!" onHome={() => go('island')} onRegion={() => go('stories')} />}
+      {phase === 'reward' && result && <Reward result={result} region={region} title="حكاية حلوة!" onHome={() => go('island')} onRegion={() => (cu ? go('unit', cu.id) : go('stories'))} />}
     </div>
   );
 }

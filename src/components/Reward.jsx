@@ -49,7 +49,7 @@ export default function Reward({ result, region, onHome, onRegion, title }) {
       </div>
       <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', gap: 10, marginTop: 6 }}>
         {onRegion && <Btn className="block" tone="teal" onClick={onRegion} sound="pop">كمّل في {region?.name}</Btn>}
-        <Btn className="block" tone="white" onClick={onHome} sound="tap">ارجع للجزيرة</Btn>
+        <Btn className="block" tone="white" onClick={onHome} sound="tap">ارجع لرحلتي</Btn>
       </div>
     </motion.div>
   );
