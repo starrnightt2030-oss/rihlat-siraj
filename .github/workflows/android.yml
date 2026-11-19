@@ -40,7 +40,12 @@ jobs:
         run: |
           chmod +x gradlew
           set -o pipefail
-          ./gradlew assembleRelease --no-daemon 2>&1 | tee ../build.log
+          for n in 1 2 3; do
+            ./gradlew assembleRelease --no-daemon 2>&1 | tee ../build.log && break
+            grep -q "Could not resolve\|Could not find\|Connection reset\|timed out" ../build.log || exit 1
+            [ $n = 3 ] && exit 1
+            echo "network problem, retry $n"; sleep 20
+          done
           cp app/build/outputs/apk/release/app-release.apk ../rihlat-siraj.apk
       - name: Report build failure
         if: failure()
