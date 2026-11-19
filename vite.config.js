@@ -7,7 +7,7 @@ const release = JSON.parse(readFileSync('./release.json', 'utf8'));
 // version.json بيتنشر مع الموقع، والتطبيق بيقارن رقمه بيه عشان يعرف إن فيه تحديث
 const versionFile = () => ({
   name: 'version-json',
-  writeBundle(opts) { writeFileSync(join(opts.dir || 'dist', 'version.json'), JSON.stringify({ version: release.version, notes: release.notes || [], date: new Date().toISOString() }, null, 2)); },
+  writeBundle(opts) { writeFileSync(join(opts.dir || 'dist', 'version.json'), JSON.stringify({ version: release.version, apk: process.env.APK_VERSION || release.version, size: Number(process.env.APK_SIZE || 0), notes: release.notes || [], date: new Date().toISOString() }, null, 2)); },
 });
 export default defineConfig({
   base: './',

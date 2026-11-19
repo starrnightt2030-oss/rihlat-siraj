@@ -6,6 +6,7 @@ import { SPARKS, STICKER_NAMES } from './content.js';
 import { GIFTS } from './gifts.js';
 import { ADHKAR, dhikrLine } from './adhkar.js';
 import { SCRIPT } from '../screens/onboard-script.js';
+import { QB, TF, RIDDLES } from './quizbank.js';
 export const giftLine = (g) => 'هدية النهارده: ' + g.t + '. ' + g.sub;
 
 export const stepLine = (s) => {
@@ -54,6 +55,9 @@ export function allLines() {
     sec.items.forEach((d) => { L.add(dhikrLine(d)); if (sec.id === 'hisn') L.add(d.title + '… أقول إيه؟'); });
   }
   for (const m of SCRIPT) for (const pp of [{ age: '4-6', gender: 'boy' }, { age: '7-9', gender: 'girl' }, { age: '10-12' }]) { const v = typeof m.say === 'function' ? m.say(pp) : m.say || (typeof m.t === 'string' ? m.t : ''); if (v) L.add(v); }
+  QB.forEach((q) => L.add(q.q)); TF.forEach(([t]) => L.add(t));
+  RIDDLES.forEach((r) => r.h.forEach((h, k) => L.add(k ? h : 'مين أنا؟ ' + h)));
+  L.add('تعادل! انتو الاتنين أبطال'); L.add('برافو للفريق الكسبان!'); L.add('برافو!');
   L.add('لسه مستخبي… كمّل رحلتك'); L.add('كل درس وحكاية بيزوّدوا نور الجرة');
   return [...L].filter(Boolean);
 }

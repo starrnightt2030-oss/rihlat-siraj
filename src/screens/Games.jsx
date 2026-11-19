@@ -5,10 +5,12 @@ import Siraj from '../components/Siraj';
 import { Confetti } from '../components/Reward';
 import { Btn, Bubble, IconBtn, I, LightChip, HomeBtn } from '../components/ui';
 import { useStore } from '../store';
+import DIcon from '../art/Icons';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say } from '../lib/voice';
 import { OrderGame, FillGame, MatchGame } from './LearnGames';
+import { Duel, TrueFalse, Riddle, QuizChallenge } from './Arena';
 
 const FACES = ['moon', 'lantern', 'mosque', 'camel', 'dates', 'palm', 'siraj', 'bashir', 'jug', 'tasbih', 'rug', 'mushaf'];
 const PUZZLES = [{ id: 'harbor', t: 'الميناء' }, { id: 'mosque', t: 'المسجد' }, { id: 'garden', t: 'البستان' }];
@@ -16,6 +18,10 @@ const shuffle = (a) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--
 
 export default function Games({ arg, go, back }) {
   const age = useStore((s) => s.profile?.age || '7-9');
+  if (arg === 'duel') return <Duel age={age} back={back} />;
+  if (arg === 'tf') return <TrueFalse back={back} />;
+  if (arg === 'riddle') return <Riddle back={back} />;
+  if (arg === 'quiz') return <QuizChallenge age={age} back={back} />;
   if (arg === 'memory') return <Memory age={age} back={back} />;
   if (arg === 'order') return <OrderGame age={age} back={back} />;
   if (arg === 'fill') return <FillGame back={back} />;
@@ -25,6 +31,19 @@ export default function Games({ arg, go, back }) {
     <div className="screen with-nav" style={{ gap: 14 }}>
       <Sky tone="lilac" />
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h1 style={{ fontSize: 32, fontWeight: 800 }}>الألعاب</h1><LightChip /></div>
+      <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => { sfx.pop(); go('games', 'duel'); }} className="card"
+        style={{ position: 'relative', border: 0, padding: 14, cursor: 'pointer', fontFamily: 'inherit', color: '#fff', textAlign: 'right', background: 'linear-gradient(120deg, #3A8FE0, #7B5CE0 55%, #FF7E6B)', boxShadow: '0 6px 0 #5A3DBF', display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden', flexShrink: 0, minHeight: 88 }}>
+        <div style={{ display: 'flex' }}><img src={A('characters/bashir/face_happy')} alt="" style={{ width: 58, height: 58, objectFit: 'contain', background: '#fff', borderRadius: 29, border: '3px solid #3A8FE0' }} /><img src={A('characters/mishmish/face_happy')} alt="" style={{ width: 58, height: 58, objectFit: 'contain', background: '#fff', borderRadius: 29, border: '3px solid #FF7E6B', marginInlineStart: -14 }} /></div>
+        <div style={{ flex: 1 }}><div style={{ fontSize: 24, fontWeight: 800 }}>تحدّي الأبطال ⚡</div><div style={{ fontSize: 14, fontWeight: 700, opacity: 0.95 }}>اتنين على نفس الموبايل… مين الأسرع؟</div></div>
+      </motion.button>
+      <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 8, flexShrink: 0 }}>
+        {[{ id: 'quiz', t: 'مسابقة الأبطال', ic: 'star', c: '#F5A623' }, { id: 'tf', t: 'صح ولا غلط؟', ic: 'shield', c: '#2FB383' }, { id: 'riddle', t: 'مين أنا؟', ic: 'wow', c: '#7B5CE0' }].map((g) => (
+          <motion.button key={g.id} type="button" whileTap={{ scale: 0.95 }} onClick={() => { sfx.pop(); go('games', g.id); }} className="card"
+            style={{ border: `3px solid ${g.c}`, padding: '10px 4px', cursor: 'pointer', fontFamily: 'inherit', color: '#26336B', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: g.c + '12' }}>
+            <DIcon id={g.ic} size={50} /><span style={{ fontSize: 15, fontWeight: 800 }}>{g.t}</span>
+          </motion.button>
+        ))}
+      </div>
       <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => { sfx.pop(); go('games', 'memory'); }} className="card"
         style={{ position: 'relative', padding: 12, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'right', borderColor: '#9D7CFF' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 44px)', gap: 4 }}>
