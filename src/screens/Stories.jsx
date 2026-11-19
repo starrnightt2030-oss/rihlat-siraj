@@ -6,7 +6,7 @@ import { ReciterChip } from '../components/Reciter';
 import Siraj from '../components/Siraj';
 import Reward from '../components/Reward';
 import { Btn, Bubble, IconBtn, Icon, I, StarsChip, HomeBtn } from '../components/ui';
-import { STORIES } from '../data/stories';
+import { STORIES, GROUPS } from '../data/stories';
 import { cardById } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
@@ -26,22 +26,24 @@ export default function Stories({ arg, go, back }) {
         <Siraj pose="read" size={110} onTap={() => say('اختار حكاية وأنا أحكيهالك')} />
         <Bubble tail="r" style={{ flex: 1, marginBottom: 16 }}>اختار حكاية وأنا أحكيهالك!</Bubble>
       </div>
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {Object.entries(STORIES).map(([id, s], i) => (
-          <motion.button key={id} type="button" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.1 }} whileTap={{ scale: 0.97 }} onClick={() => { sfx.pop(); go('stories', id); }}
-            className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', textAlign: 'right', borderColor: s.color }}>
-            <div style={{ position: 'relative', height: 160, background: `linear-gradient(135deg, ${s.color}55, #fff)` }}>
-              <img src={A(s.cover)} alt="" style={{ width: '100%', height: '100%', objectFit: s.choice ? 'cover' : 'contain', padding: s.choice ? 0 : 10 }} />
-              {id in done && <span style={{ position: 'absolute', top: 10, left: 10 }} className="chip"><Icon d={I.check} size={18} color="#2D9C4A" /> سمعتها</span>}
-              {s.choice && <span style={{ position: 'absolute', top: 10, right: 10, background: '#FF7B6B', color: '#fff', borderRadius: 14, padding: '2px 12px', fontWeight: 800 }}>اختار انت</span>}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px' }}>
-              <div style={{ flex: 1 }}><div style={{ fontSize: 22, fontWeight: 800 }}>{s.title}</div><div style={{ fontSize: 15, color: '#5D6CA0', fontWeight: 700 }}>{s.sub}</div></div>
-              <span style={{ width: 54, height: 54, borderRadius: 27, background: s.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 0 rgba(0,0,0,.15)' }}><Icon d={I.play} size={24} /></span>
-            </div>
-          </motion.button>
-        ))}
-      </div>
+      {GROUPS.map((g) => (
+        <div key={g.id} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <h2 style={{ fontSize: 21, fontWeight: 800, color: g.c, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 8, height: 24, borderRadius: 4, background: g.c }} />{g.t}</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 10 }}>
+            {Object.entries(STORIES).filter(([, s]) => s.group === g.id).map(([id, s], i) => (
+              <motion.button key={id} type="button" initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.05 }} whileTap={{ scale: 0.96 }} onClick={() => { sfx.pop(); go('stories', id); }}
+                className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', textAlign: 'right', border: `3px solid ${s.color}`, fontFamily: 'inherit', color: '#26336B', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ position: 'relative', aspectRatio: '1.2', background: `linear-gradient(135deg, ${s.color}55, #fff)`, overflow: 'hidden' }}>
+                  {s.coverArt ? <StoryArt id={s.coverArt} /> : <img src={A(s.cover)} alt="" style={{ width: '100%', height: '100%', objectFit: s.choice ? 'cover' : 'contain', padding: s.choice ? 0 : 8 }} />}
+                  {id in done && <span style={{ position: 'absolute', top: 6, left: 6, padding: '0 8px', fontSize: 12 }} className="chip"><Icon d={I.check} size={14} color="#2D9C4A" /> سمعتها</span>}
+                  {s.choice && <span style={{ position: 'absolute', top: 6, right: 6, background: '#FF7B6B', color: '#fff', borderRadius: 12, padding: '0 8px', fontSize: 12, fontWeight: 800 }}>اختار انت</span>}
+                </div>
+                <div style={{ padding: '6px 10px 8px' }}><div style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.25 }}>{s.title}</div><div style={{ fontSize: 12, color: '#5D6CA0', fontWeight: 700 }}>{s.sub}</div></div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 // الحكايات: مفيش أي تجسيد للأنبياء — المشاهد بحر وسفينة وحوت وضوء بس
+import { STORIES2 } from './stories2.js';
 const Y = (n) => 'stories/yunus/' + n;
 export const STORIES = {
   yunus: {
@@ -66,3 +67,10 @@ export const STORIES = {
     ],
   },
 };
+// المجموعات: قصص الأنبياء، قصص من القرآن، حكايات بعبرة
+Object.assign(STORIES.yunus, { group: 'anbiya', coverArt: 'y_whale' });
+Object.assign(STORIES.nuh, { group: 'anbiya', coverArt: 'n_sail' });
+Object.assign(STORIES.naml, { group: 'anbiya', coverArt: 'a_warn' });
+Object.assign(STORIES.amana, { group: 'ibra' });
+Object.assign(STORIES, STORIES2);
+export const GROUPS = [{ id: 'anbiya', t: 'قصص الأنبياء', c: '#3FA9F5' }, { id: 'quran', t: 'قصص من القرآن', c: '#9B7BF2' }, { id: 'ibra', t: 'حكايات بعبرة', c: '#FF9A3C' }];
