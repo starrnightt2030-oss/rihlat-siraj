@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import { Bubble } from '../components/ui';
+import { BadgeGrid } from '../components/Badges';
 import { SPARKS, STICKERS, STICKER_NAMES } from '../data/content';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
@@ -24,6 +25,8 @@ export default function Album() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 800 }}><img src={A('rewards/star')} alt="" style={{ width: 26 }} />{ar(stars)} نجمة</div>
         </div>
       </div>
+
+      <BadgeGrid />
 
       <section style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}><h2 style={{ fontSize: 23, fontWeight: 800 }}>شرارات الخير</h2><span style={{ fontWeight: 800, color: '#E39400' }}>{ar(sparks.length)} من {ar(SPARKS.length)}</span></div>

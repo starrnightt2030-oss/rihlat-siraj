@@ -1,5 +1,8 @@
 // الشاشة الرئيسية: كروت لكل المحتوى — «رحلتي» مسار مرتّب، والباقي الطفل يدخله بحرّية
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { syncReminders } from '../lib/remind';
+import { today } from '../data/gifts';
 import Sky from '../components/Sky';
 import { StarsChip, LightChip } from '../components/ui';
 import DIcon from '../art/Icons';
@@ -30,6 +33,8 @@ export default function Home({ go }) {
   const pct = n / ALL_CARDS.length;
   const h = new Date().getHours();
   const hi = h >= 4 && h < 12 ? 'صباح النور' : h < 17 ? 'نهارك سعيد' : 'مساء النور';
+  const visit = useStore((st) => st.visit);
+  useEffect(() => { visit(today()); syncReminders(); }, []);
   const open = (s) => { sfx.pop(); if (s.go) go(...s.go); else go('sec', s.id); };
   return (
     <div className="screen with-nav" style={{ gap: 12 }}>

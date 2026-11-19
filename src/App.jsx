@@ -16,6 +16,8 @@ import People from './screens/People';
 import { TabBar } from './components/ui';
 import UpdatePrompt from './components/UpdatePrompt';
 import { TurnBadge } from './components/Reciter';
+import { BadgeWatcher } from './components/Badges';
+import { syncReminders } from './lib/remind';
 import { unlockAudio } from './lib/sound';
 import { hush } from './lib/voice';
 
@@ -49,6 +51,7 @@ export default function App() {
         {tabs && !arg && <TabBar cur={name} go={go} />}
         <UpdatePrompt />
         <TurnBadge />
+        <BadgeWatcher />
       </div>
     </MotionConfig>
   );

@@ -1,3 +1,4 @@
+import { syncReminders } from '../lib/remind';
 import { ReciterSheet } from '../components/Reciter';
 import { reciterById } from '../data/reciters';
 import { useMemo, useState } from 'react';
@@ -24,7 +25,7 @@ export default function Parent({ go, back }) {
   const Toggle = ({ k, t }) => (
     <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 4px', borderBottom: '2px solid #F1F4FA', fontSize: 18, fontWeight: 700 }}>
       {t}
-      <input type="checkbox" checked={!!s.settings[k]} onChange={(e) => s.setSetting(k, e.target.checked)} style={{ width: 28, height: 28, accentColor: '#1EC8BE' }} />
+      <input type="checkbox" checked={k === 'remind' ? s.settings.remind !== false : !!s.settings[k]} onChange={(e) => { s.setSetting(k, e.target.checked); if (k === 'remind') setTimeout(syncReminders, 50); }} style={{ width: 28, height: 28, accentColor: '#1EC8BE' }} />
     </label>
   );
   return (
@@ -69,6 +70,7 @@ export default function Parent({ go, back }) {
             <Toggle k="sound" t="أصوات التطبيق" />
             <Toggle k="voice" t="صوت سراج (قراءة الكلام)" />
             <Toggle k="quran" t="تلاوة الشيخ للآيات" />
+            <Toggle k="remind" t="تذكير الأذكار (الصبح والمسا والنوم)" />
             <ReciterRow />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '10px 4px' }}>
               <span style={{ fontSize: 17, fontWeight: 800 }}>سرعة كلام سراج</span>

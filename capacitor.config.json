@@ -2,8 +2,22 @@
   "appId": "com.eldawly.rihlatsiraj",
   "appName": "رحلة سراج",
   "webDir": "dist",
-  "android": { "backgroundColor": "#BFEAFF" },
+  "android": {
+    "backgroundColor": "#BFEAFF"
+  },
   "plugins": {
-    "SplashScreen": { "launchShowDuration": 600, "launchAutoHide": true, "backgroundColor": "#BFEAFF", "showSpinner": false, "androidScaleType": "CENTER_INSIDE", "splashFullScreen": false, "splashImmersive": false }
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "launchAutoHide": true,
+      "backgroundColor": "#BFEAFF",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_INSIDE",
+      "splashFullScreen": false,
+      "splashImmersive": false
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_siraj",
+      "iconColor": "#F5A623"
+    }
   }
 }

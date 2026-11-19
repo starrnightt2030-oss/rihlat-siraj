@@ -64,8 +64,8 @@ function List({ kind, go, back }) {
 
 function Detail({ p, kind, go, back }) {
   const K = KIND[kind]; const L = K.list; const i = L.indexOf(p);
-  const win = useStore((s) => s.win);
-  useEffect(() => { say(peopleLine(p, kind), p.aud ? [].concat(p.aud) : []); win('seen_' + kind, 0); return () => hush(); }, [p.id]);
+  const seeProphet = useStore((s) => s.seeProphet);
+  useEffect(() => { say(peopleLine(p, kind), p.aud ? [].concat(p.aud) : []); if (kind === 'anbiya') seeProphet(p.id); return () => hush(); }, [p.id]);
   const nav = (d) => { const q = L[(i + d + L.length) % L.length]; sfx.whoosh(); go(kind === 'anbiya' ? 'anbiya25' : 'sahaba', q.id); };
   const Sec = ({ t, c, children }) => (
     <div className="card" style={{ padding: '10px 14px', borderRight: `6px solid ${c}` }}>
