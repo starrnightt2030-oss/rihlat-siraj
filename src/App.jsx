@@ -11,6 +11,7 @@ import Games from './screens/Games';
 import Stories from './screens/Stories';
 import Parent from './screens/Parent';
 import { TabBar } from './components/ui';
+import UpdatePrompt from './components/UpdatePrompt';
 import { unlockAudio } from './lib/sound';
 import { hush } from './lib/voice';
 
@@ -42,6 +43,7 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
         {tabs && !arg && <TabBar cur={name} go={go} />}
+        <UpdatePrompt />
       </div>
     </MotionConfig>
   );

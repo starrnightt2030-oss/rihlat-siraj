@@ -4,6 +4,7 @@ import { Btn, IconBtn, I } from '../components/ui';
 import { useStore } from '../store';
 import { ALL_CARDS } from '../data/units';
 import { ar } from '../lib/asset';
+import { VERSION } from '../lib/update';
 
 export default function Parent({ go, back }) {
   const s = useStore();
@@ -63,7 +64,7 @@ export default function Parent({ go, back }) {
             <Toggle k="motion" t="الحركة والمؤثرات" />
           </div>
           <div className="card" style={{ position: 'relative', padding: 14, fontSize: 15, lineHeight: 1.7, color: '#5D6CA0', fontWeight: 600 }}>
-            المحتوى الشرعي مكتوب بلغة مبسّطة للأطفال، والآيات منقولة بنصّها مع ذكر السورة ورقم الآية. الأحاديث مكتوب معاها مصدرها، والتلاوة بصوت الشيخ مشاري العفاسي. التطبيق لا يجسّد الأنبياء ولا الصحابة ولا الملائكة، ولا يعاقب الطفل على الغياب.
+            المحتوى الشرعي مكتوب بلغة مبسّطة للأطفال، والآيات منقولة بنصّها مع ذكر السورة ورقم الآية. الأحاديث مكتوب معاها مصدرها، والتلاوة بصوت الشيخ مشاري العفاسي. رقم النسخة: <bdi dir="ltr">{VERSION}</bdi>. التطبيق لا يجسّد الأنبياء ولا الصحابة ولا الملائكة، ولا يعاقب الطفل على الغياب.
           </div>
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Btn className="block" tone="white" onClick={() => { s.setProfile(null); go('onboard'); }}>تغيير بيانات الطفل</Btn>
