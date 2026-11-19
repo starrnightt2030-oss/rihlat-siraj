@@ -8,6 +8,10 @@ import { ADHKAR, dhikrLine } from './adhkar.js';
 import { SCRIPT } from '../screens/onboard-script.js';
 export const WELCOME_LINES = ['السلام عليكم! أهلًا بيك في رحلة سراج… يلا نتعرّف!', 'أهلًا يا بطل! وحشتني… يلا نكمّل رحلتنا', 'أهلًا يا بطلة! وحشتيني… يلا نكمّل رحلتنا'];
 import { QB, TF, RIDDLES } from './quizbank.js';
+import { HADITH, hadithLine, hadithMean } from './hadith.js';
+import { ASMAA, asmaLine, ASMAA_INTRO } from './asmaa.js';
+import { BEDTIME, BED_INTRO, BED_MORAL, BED_END } from './bedtime.js';
+import { RAMADAN_LINES } from './ramadan.js';
 import { PROPHETS, SAHABA } from './people.js';
 import { BADGES } from './badges.js';
 export const giftLine = (g) => 'هدية النهارده: ' + g.t + '. ' + g.sub;
@@ -58,7 +62,7 @@ export function allLines() {
     for (const c of u.cards) {
       (c.steps || []).forEach((s) => { L.add(stepLine(s)); if (stepPost(s)) L.add(stepPost(s)); });
       (c.steps || []).forEach((s) => { if (s.ok) L.add(s.ok); });
-      if (c.quiz) L.add(c.quiz.q);
+      if (c.quiz) L.add(c.quiz.uth ? 'كمّل الآية دي!' : c.quiz.q);
     }
   }
   for (const s of Object.values(STORIES)) {
@@ -67,6 +71,13 @@ export function allLines() {
     L.add(s.moral); s.quiz.forEach((q) => L.add(q.q));
   }
   [HUB.home.boy, HUB.home.girl, HUB.games, HUB.album, HUB.island, HUB.stories, ...Object.values(HUB.sec)].forEach((t) => L.add(t));
+  ['رتّب الحروف وكوّن الكلمة!', 'دوّر على الكلمات المستخبية!', 'رتّب كلمات الآية!'].forEach((t) => L.add(t));
+  QB.forEach((q) => L.add(q.q));
+  BEDTIME.forEach((b) => { b.s.forEach((x) => L.add(x[1])); L.add(BED_MORAL(b)); }); [BED_INTRO, BED_END.boy, BED_END.girl].forEach((t) => L.add(t));
+  Object.values(RAMADAN_LINES).forEach((t) => L.add(t));
+  ASMAA.forEach((a) => L.add(asmaLine(a))); L.add(ASMAA_INTRO);
+  HADITH.forEach((h) => { L.add(hadithLine(h)); L.add(hadithMean(h)); });
+  L.add('دي أحاديث النبي صلى الله عليه وسلم. اختار حديث وأنا أقولهولك وأشرحهولك.');
   Object.values(STICKER_NAMES).forEach((n) => L.add(n));
   SPARKS.forEach((sp) => { L.add('شرارة ' + sp.name); L.add('شرارة ' + sp.name + ' مستنياك في الحكايات'); });
   GIFTS.forEach((g) => L.add(giftLine(g)));

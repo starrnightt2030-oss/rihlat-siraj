@@ -10,6 +10,7 @@ import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say, hush, recite, onAyah } from '../lib/voice';
 import { stepLine, stepPost } from '../data/speech';
+import Q30 from '../data/quran30.json';
 import Art from '../art';
 import Practice, { PRACTICE } from '../components/Practice';
 import { ReciterChip } from '../components/Reciter';
@@ -18,7 +19,10 @@ import { RAKAT } from '../data/units';
 const tashkeel = (t) => (t.match(/[\u064B-\u0652]/g) || []).length >= 3;
 const TILE = ['#FFF3D6', '#E6F6EE', '#FFEAF2', '#E6F0FF', '#F1ECFF', '#E3F6FA'];
 const TILE_C = ['#F5A623', '#2FB383', '#E0609E', '#3A8FE0', '#7B5CE0', '#1F8FA6'];
-const audOf = (s) => s.k === 'ayah' && s.aud ? [].concat(s.aud) : s.k === 'surah' ? s.verses.map((_, k) => s.sura + String(k + 1).padStart(3, '0')) : [];
+const codeOf = (s, k) => s.sura + String((s.from || 1) + k).padStart(3, '0');
+const audOf = (s) => s.k === 'ayah' && s.aud ? [].concat(s.aud) : s.k === 'surah' ? s.verses.map((_, k) => codeOf(s, k)) : [];
+// نص المصحف (حفص) للسور اللي عندنا، عشان الكتابة تبقى مطابقة للمصحف
+const uth = (s, k, v) => Q30[+s.sura]?.ayat[(s.from || 1) - 1 + k] || v;
 const speak = (s) => say(stepLine(s), audOf(s), stepPost(s));
 
 export default function Card({ arg, go, back }) {
@@ -36,7 +40,7 @@ export default function Card({ arg, go, back }) {
   const total = c.steps.length + 1;
   const pos = phase === 'learn' ? i + 1 : total;
   useEffect(() => () => hush(), []);
-  useEffect(() => { if (phase === 'learn') speak(step); else if (phase === 'quiz') say(c.quiz.q); }, [i, phase]);
+  useEffect(() => { if (phase === 'learn') speak(step); else if (phase === 'quiz') say(c.quiz.uth ? 'كمّل الآية دي!' : c.quiz.q); }, [i, phase]);
 
   const next = () => { sfx.whoosh(); if (i < c.steps.length - 1) setI(i + 1); else setPhase('quiz'); };
   const answer = (k) => {
@@ -73,7 +77,7 @@ export default function Card({ arg, go, back }) {
           <motion.div key="quiz" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
               <img src={A('characters/bashir/hero')} alt="بشير" className="float" style={{ width: 100, height: 112, objectFit: 'contain', flexShrink: 0 }} />
-              <Bubble tail="r" style={{ flex: 1, marginBottom: 10 }}><div style={{ fontSize: 14, fontWeight: 800, color: '#7B5CE0' }}>بشير بيسألك</div><div style={{ fontSize: 20, fontWeight: 800 }}>{c.quiz.q}</div></Bubble>
+              <Bubble tail="r" style={{ flex: 1, marginBottom: 10 }}><div style={{ fontSize: 14, fontWeight: 800, color: '#7B5CE0' }}>بشير بيسألك</div><div style={{ fontSize: 20, fontWeight: 800 }}>{c.quiz.uth ? <>كمّل الآية: <span className="hafs" style={{ fontSize: 23, fontWeight: 400 }}>{c.quiz.q.replace(/^كمّل: /, '')}</span></> : c.quiz.q}</div></Bubble>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {c.quiz.a.map((t, k) => {
@@ -81,7 +85,7 @@ export default function Card({ arg, go, back }) {
                 const col = ['#FF9A7A', '#4ED7A3', '#FFB0CC'][k % 3];
                 return (
                   <motion.button key={k} type="button" onClick={() => answer(k)} animate={wrong ? { x: [0, -12, 12, -8, 8, 0] } : right ? { scale: [1, 1.05, 1] } : {}} transition={{ duration: 0.4 }}
-                    className={c.quiz.a[k].length < 40 && /[ً-ْ]/.test(t) ? 'ayah' : ''}
+                    className={c.quiz.uth ? 'hafs' : c.quiz.a[k].length < 40 && /[ً-ْ]/.test(t) ? 'ayah' : ''}
                     style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 68, padding: '8px 14px', border: 0, borderRadius: 24, cursor: 'pointer', fontFamily: /[ً-ْ]/.test(t) ? "'Amiri', serif" : 'inherit', fontSize: /[ً-ْ]/.test(t) ? 24 : 20, fontWeight: 800, textAlign: 'right',
                       color: right || wrong ? '#fff' : '#26336B', background: right ? '#2FB383' : wrong ? '#FF7E6B' : '#fff', boxShadow: `0 6px 0 ${right ? '#22946A' : wrong ? '#E0563F' : '#E8E0D0'}` }}>
                     <span className="num" style={{ '--c': right || wrong ? '#fff' : col, color: right ? '#22946A' : wrong ? '#E0563F' : '#fff', fontFamily: "'Baloo Bhaijaan 2'" }}>{ar(k + 1)}</span>
@@ -216,16 +220,17 @@ function Step({ s, u, g }) {
 function Surah({ s, u }) {
   const [now, setNow] = useState(null);
   useEffect(() => onAyah(setNow), []);
+  const from = s.from || 1;
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ textAlign: 'center' }}><span className="ribbon" style={{ '--c': u.color, fontSize: 18 }}>سورة {s.name}</span><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896', margin: '4px 0' }}>دوس على أي آية تسمعها وكرّرها</div><ReciterChip codes={s.verses.map((_, k) => s.sura + String(k + 1).padStart(3, '0'))} color={u.dark} /></div>
-      {s.name !== 'الفاتحة' && <div className="ayah" style={{ textAlign: 'center', fontSize: 20, color: '#6E4FD0' }}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>}
+      <div style={{ textAlign: 'center' }}><span className="ribbon" style={{ '--c': u.color, fontSize: 18 }}>سورة {s.name}</span><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896', margin: '4px 0' }}>دوس على أي آية تسمعها وكرّرها</div><ReciterChip codes={s.verses.map((_, k) => codeOf(s, k))} color={u.dark} /></div>
+      {s.sura !== '001' && from === 1 && <div className="hafs" style={{ textAlign: 'center', fontSize: 22, color: '#6E4FD0' }}>بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>}
       {s.verses.map(([v, m], k) => (
-        <motion.button type="button" key={k} onClick={() => { sfx.tap(); recite([s.sura + String(k + 1).padStart(3, '0')]); }} data-now={now === s.sura + String(k + 1).padStart(3, '0') || undefined} aria-label={'اسمع الآية ' + (k + 1)} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: k * 0.08 }} className="card"
-          style={{ border: now === s.sura + String(k + 1).padStart(3, '0') ? `3px solid ${TILE_C[k % 6]}` : '3px solid transparent', cursor: 'pointer', textAlign: 'right', fontFamily: 'inherit', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, background: TILE[k % 6], boxShadow: `0 4px 0 ${TILE_C[k % 6]}33`, transform: now === s.sura + String(k + 1).padStart(3, '0') ? 'scale(1.03)' : 'none', transition: 'transform .2s' }}>
-          <span className="num" style={{ '--c': TILE_C[k % 6], width: 30, height: 30, fontSize: 15 }}>{ar(k + 1)}</span>
+        <motion.button type="button" key={k} onClick={() => { sfx.tap(); recite([codeOf(s, k)]); }} data-now={now === codeOf(s, k) || undefined} aria-label={'اسمع الآية ' + (from + k)} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: Math.min(k, 8) * 0.06 }} className="card"
+          style={{ border: now === codeOf(s, k) ? `3px solid ${TILE_C[k % 6]}` : '3px solid transparent', cursor: 'pointer', textAlign: 'right', fontFamily: 'inherit', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, background: TILE[k % 6], boxShadow: `0 4px 0 ${TILE_C[k % 6]}33`, transform: now === codeOf(s, k) ? 'scale(1.03)' : 'none', transition: 'transform .2s' }}>
+          <span className="num" style={{ '--c': TILE_C[k % 6], width: 30, height: 30, fontSize: 15 }}>{ar(from + k)}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="ayah" style={{ fontSize: 23, color: '#26336B', lineHeight: 1.7 }}>{v}</div>
+            <div className="hafs" style={{ fontSize: 25, color: '#26336B' }}>{uth(s, k, v)}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: TILE_C[k % 6] }}>{m}</div>
           </div>
           <Icon d={I.sound} size={22} color={TILE_C[k % 6]} />

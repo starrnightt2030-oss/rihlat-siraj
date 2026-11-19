@@ -12,6 +12,7 @@ import { say, hubSay, hush } from '../lib/voice';
 import { HUB } from '../data/speech';
 import { OrderGame, FillGame, MatchGame } from './LearnGames';
 import { Duel, TrueFalse, Riddle, QuizChallenge } from './Arena';
+import { Scramble, Million, WordSearch, AyahOrder } from './WordGames';
 
 const FACES = ['moon', 'lantern', 'mosque', 'camel', 'dates', 'palm', 'siraj', 'bashir', 'jug', 'tasbih', 'rug', 'mushaf'];
 const PUZZLES = [{ id: 'harbor', t: 'الميناء' }, { id: 'mosque', t: 'المسجد' }, { id: 'garden', t: 'البستان' }];
@@ -24,6 +25,10 @@ export default function Games({ arg, go, back }) {
   if (arg === 'riddle') return <Riddle back={back} />;
   if (arg === 'quiz') return <QuizChallenge age={age} back={back} />;
   if (arg === 'memory') return <Memory age={age} back={back} />;
+  if (arg === 'scramble') return <Scramble age={age} back={back} />;
+  if (arg === 'million') return <Million age={age} back={back} />;
+  if (arg === 'search') return <WordSearch age={age} back={back} />;
+  if (arg === 'ayahorder') return <AyahOrder age={age} back={back} />;
   if (arg === 'order') return <OrderGame age={age} back={back} />;
   if (arg === 'fill') return <FillGame back={back} />;
   if (arg === 'match') return <MatchGame age={age} back={back} />;
@@ -53,6 +58,19 @@ export default function Games({ arg, go, back }) {
         </div>
         <div style={{ flex: 1 }}><div style={{ fontSize: 24, fontWeight: 800 }}>لعبة الذاكرة</div><div style={{ color: '#5D6CA0', fontWeight: 700 }}>اقلب الكروت ولاقي الأزواج</div></div>
       </motion.button>
+      <h2 style={{ position: 'relative', fontSize: 22, fontWeight: 800 }}>ألعاب الكلمات ✨ جديد</h2>
+      <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 10 }}>
+        {[{ id: 'million', t: 'سؤال المليون', d: '١٠ أسئلة بتصعب', e: '🏆', c: '#2B3D8C', bg: 'linear-gradient(135deg,#2B3D8C,#4A5FC0)' },
+          { id: 'scramble', t: 'حروف مبعثرة', d: 'كوّن الكلمة', e: 'ح ر ف', c: '#7B5CE0', bg: 'linear-gradient(135deg,#7B5CE0,#B59BFF)' },
+          { id: 'search', t: 'دوّر على الكلمة', d: 'كلمات مستخبية', e: '🔎', c: '#1F8A61', bg: 'linear-gradient(135deg,#1F8A61,#3CC48F)' },
+          { id: 'ayahorder', t: 'رتّب الآية', d: 'من جزء عمّ', e: '📖', c: '#E07F1E', bg: 'linear-gradient(135deg,#E07F1E,#FFC93C)' }].map((g, k) => (
+          <motion.button key={g.id} type="button" initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: k * 0.06 }} whileTap={{ scale: 0.95 }} onClick={() => { sfx.pop(); go('games', g.id); }} className="card"
+            style={{ border: 0, padding: 12, cursor: 'pointer', fontFamily: 'inherit', color: '#fff', textAlign: 'right', background: g.bg, boxShadow: `0 5px 0 ${g.c}66`, minHeight: 104, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: g.e.length > 3 ? 22 : 30, fontWeight: 800, letterSpacing: g.e.length > 3 ? 4 : 0 }}>{g.e}</span>
+            <span><span style={{ display: 'block', fontSize: 19, fontWeight: 800 }}>{g.t}</span><span style={{ fontSize: 13, fontWeight: 700, opacity: 0.92 }}>{g.d}</span></span>
+          </motion.button>
+        ))}
+      </div>
       <h2 style={{ position: 'relative', fontSize: 22, fontWeight: 800 }}>ألعاب نتعلّم بيها</h2>
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {[{ id: 'order', t: 'رتّب الوضوء', d: 'حط الخطوات بالترتيب', img: 'games/memory/jug', c: '#2FB383' }, { id: 'fill', t: 'كمّل الآية', d: 'اختار الكلمة الناقصة واسمع الشيخ', img: 'games/memory/mushaf', c: '#9B7BF2' }, { id: 'match', t: 'وصّل الذكر بوقته', d: 'كل ذكر وإمتى بنقوله', img: 'games/memory/tasbih', c: '#FF89B5' }].map((g) => (

@@ -18,12 +18,16 @@ import { HUB } from '../data/speech';
 // الأقسام: كل قسم بيفتح مجموعة وحدات، أو شاشة خاصة
 export const SECTIONS = [
   { id: 'salah', t: 'صلاتي ووضوئي', d: 'خطوة بخطوة بالصور', c: '#4A8FE0', bg: '#E6F0FF', art: { scene: 'salah' }, units: ['tahara', 'salah'] },
-  { id: 'quran', t: 'قرآني', d: 'سور قصيرة وقرّاء', c: '#9B7BF2', bg: '#F1ECFF', art: { scene: 'books' }, units: ['quran'] },
+  { id: 'quran', t: 'قرآني', d: 'جزء عمّ كامل بصوت ٥ قرّاء', c: '#9B7BF2', bg: '#F1ECFF', art: { scene: 'books' }, units: ['quran', 'amma1', 'amma2', 'amma3'] },
   { id: 'stories', t: 'الحكايات', d: 'قصص الأنبياء والقرآن', c: '#3FA9F5', bg: '#E3F2FF', img: 'stickers/whale', go: ['stories'] },
   { id: 'anbiya25', t: 'الأنبياء الـ٢٥', d: 'كل نبي وحكايته ودرسه', c: '#1F7FC9', bg: '#E3F2FF', ic: 'star', emoji: '🕋', go: ['anbiya25'] },
   { id: 'sahaba', t: 'الصحابة الكرام', d: 'أصحاب النبي ﷺ', c: '#1F8A61', bg: '#E3F7EE', emoji: '🌟', go: ['sahaba'] },
+  { id: 'hadith', t: 'أحاديث النبي ﷺ', d: '٤٠ حديث نحفظهم', c: '#E07F1E', bg: '#FFF0DE', art: { scene: 'hadith' }, go: ['hadith'] },
+  { id: 'asmaa99', t: 'أسماء الله الحسنى', d: 'الـ٩٩ اسم ومعانيهم', c: '#1F8FA6', bg: '#E3F6FA', art: { scene: 'allah' }, go: ['asmaa'] },
+  { id: 'ramadan', t: 'فانوس رمضان', d: 'عدّاد رمضان والعيد ومهامي', c: '#B8437C', bg: '#FFEAF2', art: { scene: 'lantern' }, go: ['ramadan'] },
+  { id: 'bedtime', t: 'حكايات قبل النوم', d: 'سراج يحكي وانت تنام', c: '#5B4FA8', bg: '#ECE8FF', art: { scene: 'night' }, go: ['bedtime'] },
   { id: 'adhkar', t: 'أذكاري', d: 'الصباح والمساء والنوم', c: '#2FB383', bg: '#E3F7EE', ic: 'tasbih', go: ['adhkar'] },
-  { id: 'aqida', t: 'عقيدتي', d: 'ربي وأركان الإيمان', c: '#7B5CE0', bg: '#F1ECFF', art: { scene: 'allah' }, units: ['rabbi', 'khalq', 'iman', 'malaika', 'janna', 'asmaa'] },
+  { id: 'aqida', t: 'عقيدتي', d: 'ربي وأركان الإيمان', c: '#7B5CE0', bg: '#F1ECFF', art: { scene: 'angels' }, units: ['rabbi', 'khalq', 'iman', 'malaika', 'janna', 'asmaa'] },
   { id: 'islam', t: 'أركان الإسلام', d: 'خمس أعمدة لديني', c: '#1F8A61', bg: '#E3F7EE', art: { scene: 'hajj' }, units: ['arkan', 'ramadan'] },
   { id: 'akhlaq', t: 'أخلاقي وآدابي', d: 'أكون طيب مع الناس', c: '#FF7E6B', bg: '#FFEDE8', img: 'characters/sparks/amana', units: ['akhlaq', 'adab', 'adhkar'] },
   { id: 'games', t: 'الألعاب والمسابقات', d: 'تحدّي وألغاز وذاكرة', c: '#F5A623', bg: '#FFF3D6', ic: 'star', go: ['games'] },
@@ -89,6 +93,31 @@ export default function Home({ go }) {
   );
 }
 
+// خريطة جزء عمّ: كل سورة بتنوّر لما كل كروتها تخلص
+const SURAS = (() => {
+  const m = new Map();
+  for (const c of ALL_CARDS) for (const st of c.steps || []) if (st.k === 'surah' && (+st.sura >= 78 || st.sura === '001')) {
+    const e = m.get(st.sura) || { sura: st.sura, name: st.name, cards: [] }; e.cards.push(c.id); m.set(st.sura, e);
+  }
+  return [...m.values()].sort((a, b) => b.sura - a.sura).filter((x) => x.sura !== '001');
+})();
+function AmmaMap({ done }) {
+  const ok = SURAS.filter((x) => x.cards.every((id) => id in done)).length;
+  return (
+    <div className="card" style={{ position: 'relative', padding: 14, background: '#fff', boxShadow: '0 5px 0 #9B7BF255' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 19, fontWeight: 800, flex: 1, color: '#26336B' }}>خريطة جزء عمّ</span>
+        <span style={{ fontSize: 16, fontWeight: 800, color: '#6E4FD0' }}>حفظت {ar(ok)} من {ar(SURAS.length)}</span>
+      </div>
+      <div className="progress" style={{ height: 10, margin: '8px 0 10px' }}><i style={{ width: `${(ok / SURAS.length) * 100}%`, background: 'linear-gradient(90deg,#9B7BF2,#2FB383)' }} /></div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {SURAS.map((x) => { const d = x.cards.every((id) => id in done), part = !d && x.cards.some((id) => id in done);
+          return <span key={x.sura} style={{ fontSize: 13, fontWeight: 800, padding: '3px 9px', borderRadius: 12, background: d ? '#2FB383' : part ? '#FFE9A8' : '#F1ECFF', color: d ? '#fff' : '#5A4A99' }}>{d ? '✓ ' : ''}{x.name}</span>; })}
+      </div>
+    </div>
+  );
+}
+
 // شاشة القسم: وحدات القسم كروت مرقّمة
 export function Section({ arg, go, back }) {
   const s = SECTIONS.find((x) => x.id === arg) || SECTIONS[0];
@@ -101,6 +130,7 @@ export function Section({ arg, go, back }) {
         <button type="button" className="icon-btn" aria-label="رجوع" onClick={back}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22306A" strokeWidth="3" strokeLinecap="round"><path d="M9 5l7 7-7 7" /></svg></button>
         <h1 style={{ flex: 1, fontSize: 26, fontWeight: 800, color: s.c }}>{s.t}</h1>
       </div>
+      {s.id === 'quran' && <AmmaMap done={done} />}
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {s.units.map((id, k) => {
           const u = unitById(id); const n = u.cards.filter((c) => c.id in done).length;

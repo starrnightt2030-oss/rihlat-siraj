@@ -2,7 +2,7 @@
 // التلاوة: آية آية بصوت القارئ اللي الطفل اختاره، ووضع المعلّم بيسيب وقت للطفل يردّد بعد كل آية.
 import { useStore } from '../store';
 import { lineHash } from './hash';
-import { reciterById } from '../data/reciters';
+import { reciterById, ayahUrl } from '../data/reciters';
 import { nameLine } from '../data/names';
 
 // دور الطفل في الترديد: الشاشة بتسمع هنا عشان تظهر «دورك»
@@ -32,7 +32,8 @@ const done = () => { const f = finish; finish = null; f?.(); };
 function playList(urls, my) {
   if (my !== token || !urls.length) { if (my === token) { turn(null); ayahNow(null); done(); } return; }
   const it = typeof urls[0] === 'string' ? { url: urls[0] } : urls[0];
-  ayahNow((it.url.match(/(\d{6})\.mp3$/) || [])[1] || null);
+  const mm = it.url.match(/(\d{6})\.mp3$/) || it.url.match(/\/(\d+)_(\d+)\.mp3$/);
+  ayahNow(mm ? (mm[2] ? mm[1].padStart(3, '0') + mm[2].padStart(3, '0') : mm[1]) : null);
   const a = player(); a.src = it.url;
   // صوت سراج بيتبطّأ شوية (من غير ما نبرة الصوت تتغير)، والقرآن بسرعة الشيخ الطبيعية
   const rate = it.url.includes('/audio/voice/') ? (useStore.getState().settings.vrate || 0.85) : 1;
@@ -45,7 +46,12 @@ function playList(urls, my) {
     rest = () => { rest = null; clearTimeout(timer); if (my === token) { turn(null); playList(urls.slice(1), my); } };
     timer = setTimeout(rest, ms);
   };
-  a.onerror = () => playList(urls.slice(1), my);
+  // آية من النت ومفيش نت: نشغّلها بصوت العفاسي من جوّه التطبيق بدل ما تسكت
+  a.onerror = () => {
+    const c = it.url.startsWith('http') && (it.url.match(/(\d{6})\.mp3$/) || it.url.match(/\/(\d+)_(\d+)\.mp3$/));
+    if (c) { const code = c[2] ? c[1].padStart(3, '0') + c[2].padStart(3, '0') : c[1]; return playList([{ ...it, url: `${BASE}audio/quran/${code}.mp3` }, ...urls.slice(1)], my); }
+    playList(urls.slice(1), my);
+  };
   // لو المتصفح منع الصوت قبل أول لمسة، بنشغّله أول ما الطفل يلمس الشاشة
   a.play().catch((e) => { if (e && e.name === 'NotAllowedError') window.addEventListener('pointerdown', () => { if (my === token) a.play().catch(() => {}); }, { once: true }); });
 }
@@ -54,8 +60,8 @@ export function hush() { done(); ayahNow(null); token++; clearTimeout(timer); re
 let rest = null;
 export function skipTurn() { rest?.(); }
 const ayatOf = (codes, st) => {
-  const dir = reciterById(st.reciter).dir, rep = st.teach ? Math.max(1, st.reps || 1) : 1;
-  return codes.flatMap((c) => Array.from({ length: rep }, () => (st.teach ? { url: `${BASE}audio/${dir}/${c}.mp3`, gap: true } : `${BASE}audio/${dir}/${c}.mp3`)));
+  const r = reciterById(st.reciter), rep = st.teach ? Math.max(1, st.reps || 1) : 1;
+  return codes.flatMap((c) => Array.from({ length: rep }, () => (st.teach ? { url: ayahUrl(r, c, BASE), gap: true } : ayahUrl(r, c, BASE))));
 };
 
 // say(كلام قبل، آيات، كلام بعد): مثلًا «ربنا قال…» ← الشيخ يقرا ← «يعني…»

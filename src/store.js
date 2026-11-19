@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true, quran: true, reciter: 'alafasy', teach: false, reps: 1, remind: true }, lastSeen: 0, days: [], gift: '', azkar: { d: '', ids: [], secs: [] }, tasbih: 0, zdays: [], seenBadges: [], seenProphets: [] };
+const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true, quran: true, reciter: 'alafasy', teach: false, reps: 1, remind: true }, lastSeen: 0, days: [], gift: '', azkar: { d: '', ids: [], secs: [] }, tasbih: 0, zdays: [], seenBadges: [], seenProphets: [], hdone: [], asmaSeen: [], rdays: {} };
 
 export const useStore = create(persist((set, get) => ({
   ...blank,
@@ -32,6 +32,9 @@ export const useStore = create(persist((set, get) => ({
   // أذكار النهارده: بتتصفّر كل يوم
   dhikr: (d, id) => set((s) => { const z = s.azkar?.d === d ? s.azkar : { d, ids: [], secs: [] }; return z.ids.includes(id) ? {} : { azkar: { ...z, ids: [...z.ids, id] } }; }),
   finishSec: (d, sec, light = 3) => { const s = get(); const z = s.azkar?.d === d ? s.azkar : { d, ids: [], secs: [] }; if (z.secs.includes(sec)) return false; set({ azkar: { ...z, secs: [...z.secs, sec] }, light: s.light + light, zdays: (s.zdays || []).includes(d) ? s.zdays : [...(s.zdays || []), d].slice(-120) }); return true; },
+  ramTask: (d, id) => set((s) => { const all = s.rdays || {}, l = all[d] || []; return { rdays: { ...all, [d]: l.includes(id) ? l.filter((x) => x !== id) : [...l, id] } }; }),
+  seeAsma: (k) => set((s) => { const l = s.asmaSeen || []; return l.includes(k) ? {} : { asmaSeen: [...l, k] }; }),
+  hadithDone: (id) => set((s) => { const l = s.hdone || []; return { hdone: l.includes(id) ? l.filter((x) => x !== id) : [...l, id] }; }),
   seeProphet: (id) => set((s) => { const l = s.seenProphets || []; return l.includes(id) ? {} : { seenProphets: [...l, id], games: { ...s.games, seen_anbiya_n: l.length + 1 } }; }),
   ackBadges: (ids) => set({ seenBadges: ids }),
   addTasbih: (n = 1) => set((s) => ({ tasbih: (s.tasbih || 0) + n })),

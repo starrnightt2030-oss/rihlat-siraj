@@ -12,6 +12,10 @@ import Stories from './screens/Stories';
 import Parent from './screens/Parent';
 import Adhkar from './screens/Adhkar';
 import Home, { Section } from './screens/Home';
+import Hadith from './screens/Hadith';
+import Asmaa from './screens/Asmaa';
+import Bedtime from './screens/Bedtime';
+import Ramadan from './screens/Ramadan';
 import People from './screens/People';
 import { TabBar } from './components/ui';
 import UpdatePrompt from './components/UpdatePrompt';
@@ -37,7 +41,7 @@ export default function App() {
   if (!profile && !['splash', 'onboard', 'parent'].includes(name)) name = 'splash';
   const tabs = ['home', 'island', 'stories', 'games', 'album'].includes(name) || (name === 'adhkar' && !arg);
   const P = { go, back, arg };
-  const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent, adhkar: Adhkar, home: Home, sec: Section, anbiya25: (p) => <People {...p} kind="anbiya" />, sahaba: (p) => <People {...p} kind="sahaba" /> };
+  const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent, adhkar: Adhkar, home: Home, sec: Section, anbiya25: (p) => <People {...p} kind="anbiya" />, sahaba: (p) => <People {...p} kind="sahaba" />, hadith: Hadith, asmaa: Asmaa, bedtime: Bedtime, ramadan: Ramadan };
   const S = screens[name] || Journey;
 
   return (

@@ -1,9 +1,8 @@
 // رسومات الوضوء (نسخة واقعية): طفل كامل واقف قدّام الحوض — راس ورقبة وكتاف وإيدين بصوابع حقيقية وكُم متني
 // من غير ملامح وش (عيون/بُق) التزامًا بقواعد المحتوى. كل خطوة بتبيّن الجزء اللي بيتغسل + المية + حدّ الغسل.
-import { PAL } from './Kid';
 import { Mark, Label } from './Body';
 
-const SK = { base: '#F3C6A2', mid: '#E9B48E', shade: '#D49873', line: '#A9694A', blush: '#F29C8C' };
+export const SK = { base: '#F3C6A2', mid: '#E9B48E', shade: '#D49873', line: '#A9694A', blush: '#F29C8C' };
 const HAIR = { boy: '#3B2416', girl: '#4A2A18', hi: '#6E4630' };
 const CLOTH = {
   boy: { c: '#FDFEFF', s: '#D7E2F0', line: '#8DA2C2', cuff: '#C9D8EC', sl: '#F1F5FB', trou: '#B9C7DA', trouS: '#93A6C0' },
@@ -27,7 +26,7 @@ const Tube = ({ pts, w, fill, line, cap = 'round' }) => {
 
 // إيد واقعية: كف + صوابع بأطوال مختلفة + إبهام. ang = اتجاه الصوابع (0 يمين، 90 تحت، -90 فوق)
 // mode: open | flat (صوابع لازقة) | cup (كف مضموم فيه مية) | point (السبابة) | rest (مقفولة نص قفلة)
-function Hand({ at, ang = -90, mode = 'open', flip = false, s = 1, tone = 0 }) {
+export function Hand({ at, ang = -90, mode = 'open', flip = false, s = 1, tone = 0 }) {
   const f = flip ? -1 : 1, fill = tone ? SK.mid : SK.base;
   const spread = mode === 'open' ? 1 : 0.55;
   const L = { open: [10.5, 12, 11.4, 8.8], flat: [10.5, 12, 11.4, 8.8], cup: [6.5, 7.5, 7, 5.5], point: [12.5, 4.5, 4.2, 3.6], rest: [6, 6.6, 6.2, 5] }[mode];

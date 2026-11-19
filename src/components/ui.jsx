@@ -11,6 +11,7 @@ export const I = {
   home: <><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-5h4v5" /></>,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   play: <path d="M16 5L7 12l9 7z" fill="currentColor" />,
+  pause: <path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor" />,
   sound: <><path d="M4 10v4h4l5 4V6L8 10z" fill="currentColor" /><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" /></>,
   lock: <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>,
   check: <path d="M5 12l5 5 9-10" />,

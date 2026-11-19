@@ -2,6 +2,7 @@
 // أنواع الخطوات: say (كلام سراج مع صورة)، ayah، hadith (نص وتخريج)، grid (خطوات مرقّمة زي البوستر)، tips (أعمل إيه)
 // رسومات: pose (وضعية صلاة)، wudu (خطوة وضوء)، scene (مشهد)، rakat (ركعات الصلوات)
 // تمارين (لازم تتحل قبل التالي): pick، match، order، fill
+import { AMMA_UNITS } from './amma.js';
 const M = (n) => 'games/memory/' + n;
 const C = (n) => 'lessons/creation/' + n;
 
@@ -210,6 +211,7 @@ export const UNITS = [
       ], quiz: { q: 'لما ربنا يفرّحنا بحاجة حلوة نعمل إيه؟', a: ['نشكره ونسبّحه', 'نتكبّر'], c: 0 } },
     ],
   },
+  ...AMMA_UNITS,
   {
     id: 'akhlaq', n: 7, title: 'أخلاقي', sub: 'أكون طيب مع الناس', color: '#FF7E6B', dark: '#E0563F', soft: '#FFEDE8', sky: 'warm', icon: 'characters/sparks/amana', sticker: 'hoopoe',
     cards: [
