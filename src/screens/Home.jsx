@@ -15,6 +15,8 @@ export const SECTIONS = [
   { id: 'salah', t: 'صلاتي ووضوئي', d: 'خطوة بخطوة بالصور', c: '#4A8FE0', bg: '#E6F0FF', art: { scene: 'salah' }, units: ['tahara', 'salah'] },
   { id: 'quran', t: 'قرآني', d: 'سور قصيرة وقرّاء', c: '#9B7BF2', bg: '#F1ECFF', art: { scene: 'books' }, units: ['quran'] },
   { id: 'stories', t: 'الحكايات', d: 'قصص الأنبياء والقرآن', c: '#3FA9F5', bg: '#E3F2FF', img: 'stickers/whale', go: ['stories'] },
+  { id: 'anbiya25', t: 'الأنبياء الـ٢٥', d: 'كل نبي وحكايته ودرسه', c: '#1F7FC9', bg: '#E3F2FF', ic: 'star', emoji: '🕋', go: ['anbiya25'] },
+  { id: 'sahaba', t: 'الصحابة الكرام', d: 'أصحاب النبي ﷺ', c: '#1F8A61', bg: '#E3F7EE', emoji: '🌟', go: ['sahaba'] },
   { id: 'adhkar', t: 'أذكاري', d: 'الصباح والمساء والنوم', c: '#2FB383', bg: '#E3F7EE', ic: 'tasbih', go: ['adhkar'] },
   { id: 'aqida', t: 'عقيدتي', d: 'ربي وأركان الإيمان', c: '#7B5CE0', bg: '#F1ECFF', art: { scene: 'allah' }, units: ['rabbi', 'khalq', 'iman', 'malaika', 'janna', 'asmaa'] },
   { id: 'islam', t: 'أركان الإسلام', d: 'خمس أعمدة لديني', c: '#1F8A61', bg: '#E3F7EE', art: { scene: 'hajj' }, units: ['arkan', 'ramadan'] },
@@ -55,7 +57,7 @@ export default function Home({ go }) {
           <motion.button key={s.id} type="button" initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.05 * k }} whileTap={{ scale: 0.95 }} onClick={() => open(s)} className="card"
             style={{ position: 'relative', border: `3px solid #fff`, padding: 0, cursor: 'pointer', fontFamily: 'inherit', color: '#26336B', textAlign: 'right', overflow: 'hidden', background: s.bg, boxShadow: `0 6px 0 ${s.c}44`, display: 'flex', flexDirection: 'column' }}>
             <div style={{ height: 96, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
-              {s.art ? <div style={{ width: 118, borderRadius: 16, overflow: 'hidden' }}><Scene id={s.art.scene} g={profile?.gender === 'girl' ? 'girl' : 'boy'} /></div> : s.img ? <img src={A(s.img)} alt="" style={{ height: 86, objectFit: 'contain' }} /> : <DIcon id={s.ic} size={78} />}
+              {s.art ? <div style={{ width: 118, borderRadius: 16, overflow: 'hidden' }}><Scene id={s.art.scene} g={profile?.gender === 'girl' ? 'girl' : 'boy'} /></div> : s.img ? <img src={A(s.img)} alt="" style={{ height: 86, objectFit: 'contain' }} /> : s.emoji ? <div style={{ display: 'flex', gap: 2, fontSize: 34 }}>{(s.id === 'anbiya25' ? ['🚢', '🔥', '🌊', '🐋'] : ['⛰️', '⚖️', '📖', '🕌']).map((e, k) => <span key={k} style={{ width: 46, height: 46, borderRadius: 23, background: '#fff', display: 'grid', placeItems: 'center', fontSize: 24, marginInlineStart: k ? -10 : 0, boxShadow: '0 2px 0 #0001' }}>{e}</span>)}</div> : <DIcon id={s.ic} size={78} />}
             </div>
             <div style={{ padding: '6px 10px 10px', background: '#fff' }}>
               <div style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.2, color: s.c }}>{s.t}</div>

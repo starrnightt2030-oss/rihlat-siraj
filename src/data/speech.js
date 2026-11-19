@@ -8,6 +8,7 @@ import { ADHKAR, dhikrLine } from './adhkar.js';
 import { SCRIPT } from '../screens/onboard-script.js';
 export const WELCOME_LINES = ['السلام عليكم! أهلًا بيك في رحلة سراج… يلا نتعرّف!', 'أهلًا يا بطل! وحشتني… يلا نكمّل رحلتنا', 'أهلًا يا بطلة! وحشتيني… يلا نكمّل رحلتنا'];
 import { QB, TF, RIDDLES } from './quizbank.js';
+import { PROPHETS, SAHABA } from './people.js';
 export const giftLine = (g) => 'هدية النهارده: ' + g.t + '. ' + g.sub;
 
 export const stepLine = (s) => {
@@ -56,6 +57,10 @@ export function allLines() {
     sec.items.forEach((d) => { L.add(dhikrLine(d)); if (sec.id === 'hisn') L.add(d.title + '… أقول إيه؟'); });
   }
   for (const m of SCRIPT) for (const pp of [{ age: '4-6', gender: 'boy' }, { age: '7-9', gender: 'girl' }, { age: '10-12' }]) { const v = typeof m.say === 'function' ? m.say(pp) : m.say || (typeof m.t === 'string' ? m.t : ''); if (v) L.add(v); }
+  const pl = (p, kind) => (kind === 'anbiya' ? 'سيدنا ' + p.n.replace(' ﷺ', ' صلى الله عليه وسلم') + '. ' : p.n + '، ' + p.lq + '. ') + p.who + ' ' + p.story + ' الدرس: ' + p.lesson;
+  const pq = (p, kind) => (kind === 'anbiya' ? 'مين النبي ده؟ ' : 'مين الصحابي ده؟ ') + p.who.split('،')[0].split('.')[0];
+  PROPHETS.forEach((p) => { L.add(pl(p, 'anbiya')); L.add(pq(p, 'anbiya')); }); SAHABA.forEach((p) => { L.add(pl(p, 'sahaba')); L.add(pq(p, 'sahaba')); });
+  L.add('ربنا ذكر في القرآن ٢٥ نبي بأسمائهم. اختار نبي وأنا أحكيلك عنه!'); L.add('الصحابة هم اللي آمنوا بالنبي ﷺ وعاشوا معاه. تعالى نتعرّف على أشهرهم!'); L.add('برافو! انت عارفهم كويس');
   QB.forEach((q) => L.add(q.q)); TF.forEach(([t]) => L.add(t));
   RIDDLES.forEach((r) => r.h.forEach((h, k) => L.add(k ? h : 'مين أنا؟ ' + h)));
   L.add('تعادل! انتو الاتنين أبطال'); L.add('برافو للفريق الكسبان!'); L.add('برافو!');
