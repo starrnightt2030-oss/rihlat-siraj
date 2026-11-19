@@ -28,7 +28,7 @@ export function IconBtn({ icon, label, onClick, color = '#22306A', sound = 'back
   return <button type="button" className="icon-btn" aria-label={label} style={style} onClick={() => { sfx[sound]?.(); onClick?.(); }}><Icon d={icon} color={color} /></button>;
 }
 export function HomeBtn({ style }) {
-  return <IconBtn icon={I.home} label="الرئيسية — رحلتي" sound="tap" color="#E07F1E" style={style} onClick={() => { location.hash = '#/island'; }} />;
+  return <IconBtn icon={I.home} label="الرئيسية" sound="tap" color="#E07F1E" style={style} onClick={() => { location.hash = '#/home'; }} />;
 }
 export function StarsChip() {
   const stars = useStore((s) => s.stars);
@@ -45,8 +45,8 @@ export function Bubble({ children, tail = 'r', style }) {
 }
 
 const TABS = [
+  { id: 'home', name: 'الرئيسية', img: 'games/memory/mosque' },
   { id: 'island', name: 'رحلتي', img: 'characters/siraj/face_happy' },
-  { id: 'adhkar', name: 'أذكاري', img: 'games/memory/tasbih' },
   { id: 'stories', name: 'الحكايات', img: 'stickers/whale' },
   { id: 'games', name: 'الألعاب', img: 'characters/lantern/lit' },
   { id: 'album', name: 'كنوزي', img: 'rewards/chest' },

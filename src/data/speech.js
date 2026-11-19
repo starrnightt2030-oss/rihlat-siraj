@@ -6,6 +6,7 @@ import { SPARKS, STICKER_NAMES } from './content.js';
 import { GIFTS } from './gifts.js';
 import { ADHKAR, dhikrLine } from './adhkar.js';
 import { SCRIPT } from '../screens/onboard-script.js';
+export const WELCOME_LINES = ['السلام عليكم! أهلًا بيك في رحلة سراج… يلا نتعرّف!', 'أهلًا يا بطل! وحشتني… يلا نكمّل رحلتنا', 'أهلًا يا بطلة! وحشتيني… يلا نكمّل رحلتنا'];
 import { QB, TF, RIDDLES } from './quizbank.js';
 export const giftLine = (g) => 'هدية النهارده: ' + g.t + '. ' + g.sub;
 
@@ -58,6 +59,7 @@ export function allLines() {
   QB.forEach((q) => L.add(q.q)); TF.forEach(([t]) => L.add(t));
   RIDDLES.forEach((r) => r.h.forEach((h, k) => L.add(k ? h : 'مين أنا؟ ' + h)));
   L.add('تعادل! انتو الاتنين أبطال'); L.add('برافو للفريق الكسبان!'); L.add('برافو!');
+  WELCOME_LINES.forEach((l) => L.add(l));
   L.add('لسه مستخبي… كمّل رحلتك'); L.add('كل درس وحكاية بيزوّدوا نور الجرة');
   return [...L].filter(Boolean);
 }

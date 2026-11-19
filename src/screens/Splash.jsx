@@ -11,9 +11,9 @@ import Intro from './Intro';
 
 export default function Splash({ go }) {
   const profile = useStore((s) => s.profile);
-  if (!profile) return <Intro onDone={() => go('onboard')} />;
+  return <Intro profile={profile} onDone={() => go(profile ? 'home' : 'onboard')} />;
   const line = profile ? `أهلًا يا ${profile.name}! مستنيك نكمّل رحلتنا` : 'بسم الله… يلا ننوّرها!';
-  const start = () => { sfx.whoosh(); say('بسم الله… يلا ننوّرها!'); go(profile ? 'island' : 'onboard'); };
+  const start = () => { sfx.whoosh(); say('بسم الله… يلا ننوّرها!'); go(profile ? 'home' : 'onboard'); };
   return (
     <div className="screen" style={{ alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' }}>
       <Sky />

@@ -33,7 +33,7 @@ export default function Unit({ arg, go, back }) {
 
       <div style={{ padding: '6px 16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {u.cards.map((c, i) => {
-          const isDone = c.id in done, can = isOpen(c.id, done), cur = can && !isDone;
+          const isDone = c.id in done, can = i === 0 || u.cards[i - 1].id in done || isOpen(c.id, done), cur = can && !isDone;
           const stars = done[c.id] || 0;
           return (
             <motion.button key={c.id} type="button" initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.06 }} whileTap={{ scale: 0.97 }}

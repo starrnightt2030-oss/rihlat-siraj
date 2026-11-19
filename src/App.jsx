@@ -11,6 +11,7 @@ import Games from './screens/Games';
 import Stories from './screens/Stories';
 import Parent from './screens/Parent';
 import Adhkar from './screens/Adhkar';
+import Home, { Section } from './screens/Home';
 import { TabBar } from './components/ui';
 import UpdatePrompt from './components/UpdatePrompt';
 import { TurnBadge } from './components/Reciter';
@@ -27,13 +28,13 @@ export default function App() {
   useEffect(() => { const f = () => { hush(); setRoute(parse()); }; addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   useEffect(() => { const f = () => unlockAudio(); addEventListener('pointerdown', f, { once: true }); }, []);
   const go = (name, arg) => { location.hash = '#/' + name + (arg ? '/' + arg : ''); };
-  const back = () => (history.length > 1 ? history.back() : go('island'));
+  const back = () => (history.length > 1 ? history.back() : go('home'));
 
   let { name, arg } = route;
   if (!profile && !['splash', 'onboard', 'parent'].includes(name)) name = 'splash';
-  const tabs = ['island', 'stories', 'games', 'album'].includes(name) || (name === 'adhkar' && !arg);
+  const tabs = ['home', 'island', 'stories', 'games', 'album'].includes(name) || (name === 'adhkar' && !arg);
   const P = { go, back, arg };
-  const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent, adhkar: Adhkar };
+  const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent, adhkar: Adhkar, home: Home, sec: Section };
   const S = screens[name] || Journey;
 
   return (

@@ -53,7 +53,7 @@ export default function Onboard({ go, back }) {
     setLog((l) => [...l, { me: true, t: ANS[k](np) }]);
     setTimeout(() => setI((x) => x + 1), 500);
   };
-  const finish = () => { setProfile({ ...p, name: p.name.trim(), buddy: p.buddy || 'siraj' }); sfx.good(); go('island'); };
+  const finish = () => { setProfile({ ...p, name: p.name.trim(), buddy: p.buddy || 'siraj' }); sfx.good(); go('home'); };
   const avatar = p.gender === 'girl' ? 'characters/children/girl' : p.gender === 'boy' ? 'characters/children/boy' : null;
 
   return (

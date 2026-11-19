@@ -42,7 +42,8 @@ function playList(urls, my) {
     timer = setTimeout(rest, ms);
   };
   a.onerror = () => playList(urls.slice(1), my);
-  a.play().catch(() => {});
+  // لو المتصفح منع الصوت قبل أول لمسة، بنشغّله أول ما الطفل يلمس الشاشة
+  a.play().catch((e) => { if (e && e.name === 'NotAllowedError') window.addEventListener('pointerdown', () => { if (my === token) a.play().catch(() => {}); }, { once: true }); });
 }
 export function hush() { ayahNow(null); token++; clearTimeout(timer); rest = null; turn(null); try { el?.pause(); } catch (e) {} try { window.speechSynthesis?.cancel(); } catch (e) {} }
 // يتخطى وقت الترديد ويكمّل
