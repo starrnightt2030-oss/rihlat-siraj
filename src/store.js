@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true, quran: true }, lastSeen: 0, days: [], gift: '' };
+const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true, quran: true, reciter: 'alafasy', teach: false, reps: 1 }, lastSeen: 0, days: [], gift: '', azkar: { d: '', ids: [], secs: [] }, tasbih: 0 };
 
 export const useStore = create(persist((set, get) => ({
   ...blank,
@@ -29,5 +29,9 @@ export const useStore = create(persist((set, get) => ({
   },
   win: (k, light = 2) => set((s) => ({ light: s.light + light, games: { ...s.games, [k]: (s.games[k] || 0) + 1 } })),
   gameScore: (k, v) => set((s) => ({ games: { ...s.games, [k]: Math.max(s.games[k] || 0, v) } })),
+  // أذكار النهارده: بتتصفّر كل يوم
+  dhikr: (d, id) => set((s) => { const z = s.azkar?.d === d ? s.azkar : { d, ids: [], secs: [] }; return z.ids.includes(id) ? {} : { azkar: { ...z, ids: [...z.ids, id] } }; }),
+  finishSec: (d, sec, light = 3) => { const s = get(); const z = s.azkar?.d === d ? s.azkar : { d, ids: [], secs: [] }; if (z.secs.includes(sec)) return false; set({ azkar: { ...z, secs: [...z.secs, sec] }, light: s.light + light }); return true; },
+  addTasbih: (n = 1) => set((s) => ({ tasbih: (s.tasbih || 0) + n })),
   reset: () => set({ ...blank }),
 }), { name: 'siraj-v1', version: 1 }));

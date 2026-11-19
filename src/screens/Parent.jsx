@@ -1,3 +1,5 @@
+import { ReciterSheet } from '../components/Reciter';
+import { reciterById } from '../data/reciters';
 import { useMemo, useState } from 'react';
 import Sky from '../components/Sky';
 import { Btn, IconBtn, I } from '../components/ui';
@@ -5,6 +7,12 @@ import { useStore } from '../store';
 import { ALL_CARDS } from '../data/units';
 import { ar } from '../lib/asset';
 import { VERSION } from '../lib/update';
+
+function ReciterRow() {
+  const [o, setO] = useState(false);
+  const st = useStore((s) => s.settings);
+  return (<><button type="button" onClick={() => setO(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 4px', border: 0, background: 'transparent', fontFamily: 'inherit', fontSize: 17, fontWeight: 800, color: '#26336B', cursor: 'pointer' }}><span>القارئ ووضع المعلّم</span><span style={{ color: '#2A6FBB' }}>{reciterById(st.reciter).name}{st.teach ? ' · المعلّم' : ''} ‹</span></button><ReciterSheet open={o} onClose={() => setO(false)} /></>);
+}
 
 export default function Parent({ go, back }) {
   const s = useStore();
@@ -61,6 +69,7 @@ export default function Parent({ go, back }) {
             <Toggle k="sound" t="أصوات التطبيق" />
             <Toggle k="voice" t="صوت سراج (قراءة الكلام)" />
             <Toggle k="quran" t="تلاوة الشيخ للآيات" />
+            <ReciterRow />
             <Toggle k="motion" t="الحركة والمؤثرات" />
           </div>
           <div className="card" style={{ position: 'relative', padding: 14, fontSize: 15, lineHeight: 1.7, color: '#5D6CA0', fontWeight: 600 }}>

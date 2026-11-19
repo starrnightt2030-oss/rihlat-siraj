@@ -4,6 +4,7 @@ import { UNITS } from './units.js';
 import { STORIES } from './stories.js';
 import { SPARKS, STICKER_NAMES } from './content.js';
 import { GIFTS } from './gifts.js';
+import { ADHKAR, dhikrLine } from './adhkar.js';
 export const giftLine = (g) => 'هدية النهارده: ' + g.t + '. ' + g.sub;
 
 export const stepLine = (s) => {
@@ -46,6 +47,11 @@ export function allLines() {
   Object.values(STICKER_NAMES).forEach((n) => L.add(n));
   SPARKS.forEach((sp) => { L.add('شرارة ' + sp.name); L.add('شرارة ' + sp.name + ' مستنياك في الحكايات'); });
   GIFTS.forEach((g) => L.add(giftLine(g)));
+  L.add('اختار أذكارك'); L.add('برافو! انت حافظ أذكارك');
+  for (const sec of ADHKAR) {
+    L.add('دلوقتي وقت ' + sec.title); L.add('ما شاء الله! خلّصت ' + sec.title);
+    sec.items.forEach((d) => { L.add(dhikrLine(d)); if (sec.id === 'hisn') L.add(d.title + '… أقول إيه؟'); });
+  }
   L.add('لسه مستخبي… كمّل رحلتك'); L.add('كل درس وحكاية بيزوّدوا نور الجرة');
   return [...L].filter(Boolean);
 }

@@ -10,6 +10,7 @@ import { say } from '../lib/voice';
 const COLS = ['#F5A623', '#2FB383', '#E0609E', '#3A8FE0', '#7B5CE0', '#1F8FA6'];
 const shuffle = (arr) => { const a = arr.map((x, i) => [x, i]); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } if (a.length > 1 && a.every(([, k], i) => k === i)) a.push(a.shift()); return a; };
 const Shake = { x: [0, -10, 10, -6, 6, 0] };
+const tash = (t) => (t.match(/[\u064B-\u0652]/g) || []).length >= 3;
 export const PRACTICE = new Set(['pick', 'match', 'order', 'fill']);
 
 const Title = ({ s, u }) => (
@@ -40,15 +41,16 @@ function Pick({ s, u, g, onSolve }) {
     else { setSt({ [k]: 'bad' }); bad(); setTimeout(() => setSt({}), 700); }
   };
   const text = typeof s.opts[0] === 'string';
+  const long = text && s.opts.some((o) => o.length > 14);
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Title s={s} u={u} />
       {s.show && <div className="card" style={{ alignSelf: 'center', padding: 6, background: u.soft }}><Art a={s.show} g={g} size={170} /></div>}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${text && s.opts.length > 3 ? 3 : 2}, minmax(0,1fr))`, gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${long ? 1 : text && s.opts.length > 3 ? 3 : 2}, minmax(0,1fr))`, gap: 10 }}>
         {order.map(([o, k], i) => (
           <Opt key={k} state={st[k]} onClick={() => tap(k)} label={typeof o === 'string' ? o : o.t || 'اختيار ' + (i + 1)} col={COLS[i % 6]}>
             {typeof o === 'string'
-              ? <span style={{ minHeight: 64, display: 'grid', placeItems: 'center', fontSize: o.length > 3 ? 18 : 30, fontWeight: 800, lineHeight: 1.3, padding: '0 4px', color: COLS[i % 6] }}>{o}</span>
+              ? <span className={tash(o) ? 'ayah' : ''} style={{ minHeight: long ? 52 : 64, display: 'grid', placeItems: 'center', fontSize: tash(o) ? 22 : o.length > 3 ? 18 : 30, fontWeight: 800, lineHeight: 1.3, padding: '0 4px', color: COLS[i % 6] }}>{o}</span>
               : <><Art a={o} g={g} size={120} />{o.t && <span style={{ fontSize: 15, fontWeight: 800 }}>{o.t}</span>}</>}
           </Opt>
         ))}

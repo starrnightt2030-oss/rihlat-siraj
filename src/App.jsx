@@ -10,8 +10,10 @@ import Album from './screens/Album';
 import Games from './screens/Games';
 import Stories from './screens/Stories';
 import Parent from './screens/Parent';
+import Adhkar from './screens/Adhkar';
 import { TabBar } from './components/ui';
 import UpdatePrompt from './components/UpdatePrompt';
+import { TurnBadge } from './components/Reciter';
 import { unlockAudio } from './lib/sound';
 import { hush } from './lib/voice';
 
@@ -29,9 +31,9 @@ export default function App() {
 
   let { name, arg } = route;
   if (!profile && !['splash', 'onboard', 'parent'].includes(name)) name = 'splash';
-  const tabs = ['island', 'stories', 'games', 'album'].includes(name);
+  const tabs = ['island', 'stories', 'games', 'album'].includes(name) || (name === 'adhkar' && !arg);
   const P = { go, back, arg };
-  const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent };
+  const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent, adhkar: Adhkar };
   const S = screens[name] || Journey;
 
   return (
@@ -44,6 +46,7 @@ export default function App() {
         </AnimatePresence>
         {tabs && !arg && <TabBar cur={name} go={go} />}
         <UpdatePrompt />
+        <TurnBadge />
       </div>
     </MotionConfig>
   );

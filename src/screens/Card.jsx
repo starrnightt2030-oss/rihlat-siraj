@@ -8,10 +8,11 @@ import { cardById, ALL_CARDS } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush, recite } from '../lib/voice';
+import { say, hush, recite, onAyah } from '../lib/voice';
 import { stepLine } from '../data/speech';
 import Art from '../art';
 import Practice, { PRACTICE } from '../components/Practice';
+import { ReciterChip } from '../components/Reciter';
 import { RAKAT } from '../data/units';
 
 const tashkeel = (t) => (t.match(/[\u064B-\u0652]/g) || []).length >= 3;
@@ -168,7 +169,7 @@ function Step({ s, u, g }) {
           <span className="ribbon" style={{ '--c': ay ? '#FF89B5' : '#2FB383', fontSize: 15 }}>{ay ? 'ربنا قال في القرآن' : 'النبي ﷺ علّمنا'}</span>
           <div className="ayah" style={{ fontSize: ay ? 32 : 26, color: ay ? '#B03A64' : '#1F7A55', margin: '10px 0 4px' }}>{ay ? `﴿${s.t}﴾` : `«${s.t}»`}</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#7A6A70' }}>{s.ref}</div>
-          {s.aud && <button type="button" onClick={() => recite([s.aud])} style={{ marginTop: 8, border: 0, borderRadius: 16, padding: '4px 14px', background: '#fff', color: '#B03A64', fontFamily: 'inherit', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 3px 0 #F2C4D6' }}>اسمع الآية من الشيخ</button>}
+          {s.aud && <div style={{ marginTop: 8 }}><ReciterChip codes={[s.aud]} /></div>}
         </div>
         {s.mean && (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
@@ -208,13 +209,20 @@ function Step({ s, u, g }) {
       </div>
     </div>
   );
-  if (s.k === 'surah') return (
+  if (s.k === 'surah') return <Surah s={s} u={u} />;
+  return null;
+}
+
+function Surah({ s, u }) {
+  const [now, setNow] = useState(null);
+  useEffect(() => onAyah(setNow), []);
+  return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ textAlign: 'center' }}><span className="ribbon" style={{ '--c': u.color, fontSize: 18 }}>سورة {s.name}</span><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896', marginTop: 4 }}>دوس على أي آية تسمعها وكرّرها</div></div>
+      <div style={{ textAlign: 'center' }}><span className="ribbon" style={{ '--c': u.color, fontSize: 18 }}>سورة {s.name}</span><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896', margin: '4px 0' }}>دوس على أي آية تسمعها وكرّرها</div><ReciterChip codes={s.verses.map((_, k) => s.sura + String(k + 1).padStart(3, '0'))} color={u.dark} /></div>
       {s.name !== 'الفاتحة' && <div className="ayah" style={{ textAlign: 'center', fontSize: 20, color: '#6E4FD0' }}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>}
       {s.verses.map(([v, m], k) => (
-        <motion.button type="button" key={k} onClick={() => { sfx.tap(); recite([s.sura + String(k + 1).padStart(3, '0')]); }} aria-label={'اسمع الآية ' + (k + 1)} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: k * 0.08 }} className="card"
-          style={{ border: 0, cursor: 'pointer', textAlign: 'right', fontFamily: 'inherit', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, background: TILE[k % 6], boxShadow: `0 4px 0 ${TILE_C[k % 6]}33` }}>
+        <motion.button type="button" key={k} onClick={() => { sfx.tap(); recite([s.sura + String(k + 1).padStart(3, '0')]); }} data-now={now === s.sura + String(k + 1).padStart(3, '0') || undefined} aria-label={'اسمع الآية ' + (k + 1)} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: k * 0.08 }} className="card"
+          style={{ border: now === s.sura + String(k + 1).padStart(3, '0') ? `3px solid ${TILE_C[k % 6]}` : '3px solid transparent', cursor: 'pointer', textAlign: 'right', fontFamily: 'inherit', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10, background: TILE[k % 6], boxShadow: `0 4px 0 ${TILE_C[k % 6]}33`, transform: now === s.sura + String(k + 1).padStart(3, '0') ? 'scale(1.03)' : 'none', transition: 'transform .2s' }}>
           <span className="num" style={{ '--c': TILE_C[k % 6], width: 30, height: 30, fontSize: 15 }}>{ar(k + 1)}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="ayah" style={{ fontSize: 23, color: '#26336B', lineHeight: 1.7 }}>{v}</div>
@@ -225,5 +233,4 @@ function Step({ s, u, g }) {
       ))}
     </div>
   );
-  return null;
 }
