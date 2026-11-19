@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import Siraj from '../components/Siraj';
 import { Confetti } from '../components/Reward';
-import { Btn, Bubble, IconBtn, I, Icon } from '../components/ui';
+import { Btn, Bubble, IconBtn, I, Icon, HomeBtn } from '../components/ui';
 import { UNITS } from '../data/units';
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
@@ -15,7 +15,7 @@ const COL = ['#F5A623', '#2FB383', '#E0609E', '#3A8FE0', '#7B5CE0', '#1F8FA6'];
 const Head = ({ t, back, right }) => (
   <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
     <IconBtn icon={I.back} label="رجوع" onClick={back} />
-    <h1 style={{ flex: 1, fontSize: 25, fontWeight: 800 }}>{t}</h1>{right}
+    <h1 style={{ flex: 1, fontSize: 25, fontWeight: 800 }}>{t}</h1>{right}<HomeBtn />
   </div>
 );
 function Win({ text, again }) {
@@ -27,6 +27,7 @@ function Win({ text, again }) {
       <Siraj pose="party" size={140} />
       <Bubble tail="b">{text} خدت +٣ نور</Bubble>
       <Btn className="block" tone="grape" sound="pop" onClick={again}>العب تاني</Btn>
+      <Btn className="block" tone="white" onClick={() => { location.hash = '#/island'; }}>ارجع لرحلتي</Btn>
     </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import Siraj from '../components/Siraj';
-import { IconBtn, Icon, I } from '../components/ui';
+import { IconBtn, Icon, I, HomeBtn } from '../components/ui';
 import { unitById, UNITS, isOpen } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
@@ -17,7 +17,7 @@ export default function Unit({ arg, go, back }) {
         <svg aria-hidden="true" viewBox="0 0 390 260" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
           <circle cx="330" cy="40" r="120" fill="#fff" opacity=".12" /><circle cx="30" cy="250" r="90" fill="#fff" opacity=".1" />
         </svg>
-        <IconBtn icon={I.back} label="رجوع" onClick={back} style={{ position: 'relative' }} />
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between' }}><IconBtn icon={I.back} label="رجوع" onClick={back} /><HomeBtn /></div>
         <div style={{ position: 'relative', marginTop: 8, marginLeft: 140 }}>
           <span style={{ display: 'inline-block', background: 'rgba(255,255,255,.28)', borderRadius: 14, padding: '1px 12px', fontSize: 14, fontWeight: 800 }}>الوحدة {ar(u.n)}</span>
           <h1 style={{ fontSize: 50, fontWeight: 800, lineHeight: 1.05, textShadow: `0 4px 0 ${u.dark}` }}>{u.title}</h1>

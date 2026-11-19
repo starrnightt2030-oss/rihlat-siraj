@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import Siraj from '../components/Siraj';
 import Reward from '../components/Reward';
-import { Btn, Bubble, IconBtn, Icon, I } from '../components/ui';
+import { Btn, Bubble, IconBtn, Icon, I, HomeBtn } from '../components/ui';
 import { cardById, ALL_CARDS } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
@@ -52,7 +52,7 @@ export default function Card({ arg, go, back }) {
         <div style={{ flex: 1, height: 16, borderRadius: 8, background: '#fff', overflow: 'hidden', boxShadow: 'inset 0 2px 0 #EEE7D8' }} aria-label={`الخطوة ${pos} من ${total}`}>
           <div style={{ height: '100%', width: `${(pos / total) * 100}%`, borderRadius: 8, background: `linear-gradient(90deg, ${u.color}, ${u.dark})`, transition: 'width .4s' }} />
         </div>
-        <span className="ribbon" style={{ '--c': u.color, fontSize: 14, padding: '2px 12px' }}>{c.title}</span>
+        <HomeBtn />
       </div>
 
       <AnimatePresence mode="wait">

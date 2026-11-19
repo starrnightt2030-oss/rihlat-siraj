@@ -1,6 +1,6 @@
 // توليد صوت سراج بالعامية المصرية من Azure (يشتغل على GitHub Actions بالمفتاح المحفوظ في أسرار الريبو)
 // كل جملة بتتولّد مرة واحدة، وأي جملة جديدة أو متغيّرة بس هي اللي بتتولّد تاني
-import { writeFileSync, mkdirSync, existsSync, readdirSync, unlinkSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdirSync, existsSync, readdirSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { allLines } from '../src/data/speech.js';
@@ -29,18 +29,21 @@ async function synth(text, file) {
   throw new Error('فشل التوليد');
 }
 
+// الملفات المسجّلة (-r.mp3) ليها الأولوية ومبتتمسحش. التوليد بس للجمل اللي مالهاش صوت.
 const tag = lineHash(VOICE + PITCH + RATE);
+const mf = join(out, 'manifest.json');
+const old = existsSync(mf) ? JSON.parse(readFileSync(mf, 'utf8')).map || {} : {};
 const lines = allLines();
-const want = new Set();
+const map = {};
 let made = 0;
 for (const t of lines) {
-  const name = `${lineHash(t)}-${tag}.mp3`; want.add(name);
-  const file = join(out, name);
-  if (existsSync(file)) continue;
+  const h = lineHash(t);
+  if (old[h] && old[h].endsWith('-r.mp3') && existsSync(join(out, old[h]))) { map[h] = old[h]; continue; }
+  const name = `${h}-${tag}.mp3`; map[h] = name;
+  if (existsSync(join(out, name))) continue;
   if (DRY) { console.log('«' + speakable(t).slice(0, 90) + '»'); continue; }
-  await synth(speakable(t), file); made++;
-  if (made % 20 === 0) console.log('اتولّد', made);
+  await synth(speakable(t), join(out, name)); made++;
 }
-for (const f of readdirSync(out)) if (f.endsWith('.mp3') && !want.has(f)) unlinkSync(join(out, f));
-if (!DRY) writeFileSync(join(out, 'manifest.json'), JSON.stringify({ tag, files: [...want].map((n) => n.split('-')[0]) }));
+const keep = new Set(Object.values(map));
+if (!DRY) { for (const f of readdirSync(out)) if (f.endsWith('.mp3') && !keep.has(f)) unlinkSync(join(out, f)); writeFileSync(mf, JSON.stringify({ map })); }
 console.log(`خلاص: ${lines.length} جملة، اتولّد جديد ${made}`);

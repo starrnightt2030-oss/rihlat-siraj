@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import Siraj from '../components/Siraj';
 import Reward from '../components/Reward';
-import { Btn, Bubble, IconBtn, Icon, I, StarsChip } from '../components/ui';
+import { Btn, Bubble, IconBtn, Icon, I, StarsChip, HomeBtn } from '../components/ui';
 import { STORIES } from '../data/stories';
 import { cardById } from '../data/units';
 import { useStore } from '../store';
@@ -88,6 +88,7 @@ function Player({ id, go, back }) {
         <IconBtn icon={I.close} label="اقفل الحكاية" onClick={back} />
         <div style={{ flex: 1, textAlign: 'center', fontWeight: 800, fontSize: 18, background: 'rgba(255,255,255,.85)', borderRadius: 18, padding: '4px 10px' }}>{S.title}</div>
         <span className="chip" style={{ paddingInline: 12 }}>{ar(Math.min(i + 1, S.scenes.length))} / {ar(S.scenes.length)}</span>
+        <HomeBtn />
       </div>
 
       {phase === 'story' && (

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import Siraj from '../components/Siraj';
 import { Confetti } from '../components/Reward';
-import { Btn, Bubble, IconBtn, I, LightChip } from '../components/ui';
+import { Btn, Bubble, IconBtn, I, LightChip, HomeBtn } from '../components/ui';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
@@ -88,6 +88,7 @@ function Memory({ age, back }) {
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
         <IconBtn icon={I.back} label="رجوع" onClick={back} />
         <h1 style={{ flex: 1, fontSize: 26, fontWeight: 800 }}>لعبة الذاكرة</h1>
+        <HomeBtn />
         <span className="chip" style={{ paddingInline: 12 }}>{ar(got.length)} / {ar(pairs)}</span>
       </div>
       <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 8, perspective: 800 }}>
@@ -110,6 +111,7 @@ function Memory({ age, back }) {
           <Siraj pose="party" size={140} />
           <Bubble tail="b">برافو! لقيت كل الأزواج في {ar(tries)} محاولات — خدت نور للجزيرة</Bubble>
           <Btn className="block" tone="grape" onClick={again} sound="pop">العب تاني</Btn>
+          <Btn className="block" tone="white" onClick={() => { location.hash = '#/island'; }}>ارجع لرحلتي</Btn>
         </motion.div>
       )}
     </div>
@@ -140,6 +142,7 @@ function Puzzle({ id, age, back }) {
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
         <IconBtn icon={I.back} label="رجوع" onClick={back} />
         <h1 style={{ flex: 1, fontSize: 26, fontWeight: 800 }}>رتّب الصورة</h1>
+        <HomeBtn />
         <img src={img} alt="الصورة الأصلية" style={{ width: 56, height: 56, borderRadius: 14, border: '3px solid #fff', objectFit: 'cover' }} />
       </div>
       <Bubble style={{ position: 'relative' }}>{solved ? 'برافو! الصورة رجعت كاملة' : 'دوس على حتتين عشان تبدّلهم لحد ما الصورة ترجع'}</Bubble>
@@ -153,6 +156,7 @@ function Puzzle({ id, age, back }) {
         {solved && <Confetti n={30} />}
       </div>
       {solved && <Btn className="block" tone="teal" sound="pop" onClick={() => setSeed(seed + 1)}>العب تاني</Btn>}
+      {solved && <Btn className="block" tone="white" onClick={() => { location.hash = '#/island'; }}>ارجع لرحلتي</Btn>}
     </div>
   );
 }

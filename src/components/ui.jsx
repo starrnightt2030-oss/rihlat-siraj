@@ -8,6 +8,7 @@ export const Icon = ({ d, size = 24, color = 'currentColor', w = 3 }) => (
 );
 export const I = {
   back: <path d="M9 5l7 7-7 7" />,
+  home: <><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-5h4v5" /></>,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   play: <path d="M16 5L7 12l9 7z" fill="currentColor" />,
   sound: <><path d="M4 10v4h4l5 4V6L8 10z" fill="currentColor" /><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" /></>,
@@ -25,6 +26,9 @@ export function Btn({ children, tone = '', className = '', onClick, sound = 'tap
 }
 export function IconBtn({ icon, label, onClick, color = '#22306A', sound = 'back', style }) {
   return <button type="button" className="icon-btn" aria-label={label} style={style} onClick={() => { sfx[sound]?.(); onClick?.(); }}><Icon d={icon} color={color} /></button>;
+}
+export function HomeBtn({ style }) {
+  return <IconBtn icon={I.home} label="الرئيسية — رحلتي" sound="tap" color="#E07F1E" style={style} onClick={() => { location.hash = '#/island'; }} />;
 }
 export function StarsChip() {
   const stars = useStore((s) => s.stars);

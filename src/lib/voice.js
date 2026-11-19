@@ -4,8 +4,8 @@ import { useStore } from '../store';
 import { lineHash } from './hash';
 
 const BASE = import.meta.env.BASE_URL;
-let man = null, tag = '';
-fetch(BASE + 'audio/voice/manifest.json').then((r) => (r.ok ? r.json() : null)).then((m) => { if (m) { man = new Set(m.files); tag = m.tag; } }).catch(() => {});
+let man = null;
+const ready = fetch(BASE + 'audio/voice/manifest.json').then((r) => (r.ok ? r.json() : null)).then((m) => { if (m) man = m.map || Object.fromEntries((m.files || []).map((h) => [h, `${h}-${m.tag}.mp3`])); }).catch(() => {}).finally(() => { man = man || {}; });
 
 let el = null, queue = [], token = 0;
 const player = () => { if (!el) { el = new Audio(); el.preload = 'auto'; } return el; };
@@ -23,12 +23,13 @@ function playList(urls, my) {
 export function hush() { token++; try { el?.pause(); } catch (e) {} try { window.speechSynthesis?.cancel(); } catch (e) {} }
 
 export function say(text, after = []) {
+  if (man === null) { const my0 = ++token; ready.then(() => { if (token === my0) say(text, after); }); return; }
   const st = useStore.getState().settings;
   hush(); const my = token;
   const ayat = st.quran === false ? [] : after.map((c) => `${BASE}audio/quran/${c}.mp3`);
   if (!st.voice || !text) { playList(ayat, my); return; }
   const h = lineHash(text);
-  if (man?.has(h)) { playList([`${BASE}audio/voice/${h}-${tag}.mp3`, ...ayat], my); return; }
+  if (man?.[h]) { playList([`${BASE}audio/voice/${man[h]}`, ...ayat], my); return; }
   try {
     if (!tvoice) pick();
     if (!tvoice || !window.speechSynthesis) { playList(ayat, my); return; }
