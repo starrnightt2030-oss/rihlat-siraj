@@ -10,9 +10,9 @@ import { Btn } from './ui';
 const Mic = ({ c = '#fff', s = 22 }) => (<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill={c} /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>);
 const Face = ({ r, size = 46 }) => (
   <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden="true" style={{ flexShrink: 0 }}>
-    <circle cx="24" cy="24" r="23" fill={r.c + '22'} /><path d="M10 40 a14 12 0 0 1 28 0z" fill={r.c} />
-    <path d="M24 9 c-6 0 -9 4 -9 9 h18 c0 -5 -3 -9 -9 -9z" fill="#fff" stroke={r.c} strokeWidth="2" /><path d="M16 22 c0 5 3 8 8 8 s8 -3 8 -8" fill="#F5CFB0" />
-    <path d="M30 6 l2 3 3 1 -3 1 -2 3 -2 -3 -3 -1 3 -1z" fill="#FFD25A" />
+    <circle cx="24" cy="24" r="23" fill={r.c + '22'} /><path d="M8 40 h32 l-3 -6 h-26z" fill={r.c} />
+    <path d="M14 12 h20 v22 h-20z" fill="#fff" stroke={r.c} strokeWidth="2" rx="2" /><path d="M24 12 v22" stroke={r.c} strokeWidth="2" /><path d="M17 18 h4 M17 23 h4 M27 18 h4 M27 23 h4" stroke={r.c} strokeWidth="2" strokeLinecap="round" />
+    <path d="M36 6 l2 3 3 1 -3 1 -2 3 -2 -3 -3 -1 3 -1z" fill="#FFD25A" />
   </svg>
 );
 

@@ -5,7 +5,7 @@ import Sky from '../components/Sky';
 import { Btn, IconBtn, I } from '../components/ui';
 import { useStore } from '../store';
 import { ALL_CARDS } from '../data/units';
-import { ar } from '../lib/asset';
+import { A, ar } from '../lib/asset';
 import { VERSION } from '../lib/update';
 
 function ReciterRow() {
@@ -73,7 +73,15 @@ export default function Parent({ go, back }) {
             <Toggle k="motion" t="الحركة والمؤثرات" />
           </div>
           <div className="card" style={{ position: 'relative', padding: 14, fontSize: 15, lineHeight: 1.7, color: '#5D6CA0', fontWeight: 600 }}>
-            المحتوى الشرعي مكتوب بلغة مبسّطة للأطفال، والآيات منقولة بنصّها مع ذكر السورة ورقم الآية. الأحاديث مكتوب معاها مصدرها، والتلاوة بصوت الشيخ مشاري العفاسي. رقم النسخة: <bdi dir="ltr">{VERSION}</bdi>. التطبيق لا يجسّد الأنبياء ولا الصحابة ولا الملائكة، ولا يعاقب الطفل على الغياب.
+            المحتوى الشرعي مكتوب بلغة مبسّطة للأطفال، والآيات منقولة بنصّها مع ذكر السورة ورقم الآية. الأحاديث مكتوب معاها مصدرها، والتلاوة بصوت ٥ قرّاء يختار منهم الطفل (العفاسي، الحصري، السديس، الشاطري، الدوسري). رقم النسخة: <bdi dir="ltr">{VERSION}</bdi>. التطبيق لا يجسّد الأنبياء ولا الصحابة ولا الملائكة، ولا يعاقب الطفل على الغياب.
+          </div>
+          <div className="card" style={{ position: 'relative', padding: '18px 14px', textAlign: 'center', background: 'linear-gradient(160deg, #FFF8E6, #FFFFFF 55%, #EAF6FF)', border: '3px solid #FFE08A', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <img src={A('characters/siraj/face_happy')} alt="" style={{ width: 64, height: 64, objectFit: 'contain' }} />
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#E39400' }}>رحلة سراج</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#5D6CA0' }}>تم تصميم وتطوير التطبيق بواسطة</div>
+            <div dir="ltr" style={{ fontSize: 22, fontWeight: 800, color: '#22306A', letterSpacing: 0.5 }}>Mohamed Eldawly</div>
+            <div style={{ width: 60, height: 3, borderRadius: 2, background: '#FFC233', margin: '6px 0' }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896' }}>الإصدار <bdi dir="ltr">{VERSION}</bdi> · صدقة جارية — ادعولنا 🤍</div>
           </div>
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Btn className="block" tone="white" onClick={() => { s.setProfile(null); go('onboard'); }}>تغيير بيانات الطفل</Btn>

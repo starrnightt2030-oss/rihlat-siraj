@@ -7,9 +7,11 @@ import { useStore } from '../store';
 import { say } from '../lib/voice';
 import { sfx } from '../lib/sound';
 import { A } from '../lib/asset';
+import Intro from './Intro';
 
 export default function Splash({ go }) {
   const profile = useStore((s) => s.profile);
+  if (!profile) return <Intro onDone={() => go('onboard')} />;
   const line = profile ? `أهلًا يا ${profile.name}! مستنيك نكمّل رحلتنا` : 'بسم الله… يلا ننوّرها!';
   const start = () => { sfx.whoosh(); say('بسم الله… يلا ننوّرها!'); go(profile ? 'island' : 'onboard'); };
   return (
@@ -31,6 +33,7 @@ export default function Splash({ go }) {
         <Btn tone="" className="block pulse" onClick={start} sound="pop" style={{ fontSize: 26, minHeight: 68 }}>
           <Icon d={I.play} size={26} /> {profile ? 'يلا نكمّل' : 'يلا نبدأ الرحلة'}
         </Btn>
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#5D6CA0' }}>تصميم وتطوير Mohamed Eldawly</span>
         <button type="button" onClick={() => go('parent')} style={{ border: 0, background: 'rgba(255,255,255,.8)', borderRadius: 16, padding: '6px 16px', fontSize: 16, fontWeight: 700, color: '#5D6CA0', cursor: 'pointer' }}>ركن ولي الأمر</button>
       </div>
     </div>

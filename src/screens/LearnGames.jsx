@@ -33,10 +33,15 @@ function Win({ text, again }) {
 }
 
 // ١) رتّب خطوات الوضوء
-const WUDU = ['غسل الكفّين', 'المضمضة', 'الاستنشاق', 'غسل الوجه', 'غسل اليدين للمرفقين', 'مسح الرأس', 'مسح الأذنين', 'غسل القدمين'];
+// الوضوء كامل لكل الأعمار (من غير ما نقطع أي خطوة): الصغيرين خطوات مجمّعة، والكبار تفصيلي
+const WUDU = {
+  '4-6': ['غسل الكفّين', 'المضمضة والاستنشاق', 'غسل الوجه', 'غسل اليدين', 'مسح الرأس والأذنين', 'غسل الرجلين'],
+  '7-9': ['غسل الكفّين', 'المضمضة', 'الاستنشاق', 'غسل الوجه', 'غسل اليدين للمرفقين', 'مسح الرأس', 'مسح الأذنين', 'غسل الرجلين للكعبين'],
+  '10-12': ['غسل الكفّين', 'المضمضة', 'الاستنشاق', 'غسل الوجه', 'اليد اليمنى للمرفق', 'اليد اليسرى للمرفق', 'مسح الرأس', 'مسح الأذنين', 'الرجل اليمنى للكعب', 'الرجل اليسرى للكعب'],
+};
 export function OrderGame({ back, age }) {
-  const n = age === '4-6' ? 4 : age === '7-9' ? 6 : 8;
-  const steps = WUDU.slice(0, n);
+  const steps = WUDU[age] || WUDU['7-9'];
+  const n = steps.length;
   const [seed, setSeed] = useState(0);
   const pool = useMemo(() => shuffle(steps.map((t, i) => ({ t, i }))), [seed, n]);
   const [got, setGot] = useState([]), [bad, setBad] = useState(null);
@@ -52,10 +57,10 @@ export function OrderGame({ back, age }) {
       <Sky tone="mint" />
       <Head t="رتّب الوضوء" back={back} right={<span className="chip" style={{ paddingInline: 12 }}>{ar(got.length)}/{ar(steps.length)}</span>} />
       <Bubble style={{ position: 'relative' }}>{won ? 'برافو! الترتيب صح' : `إيه الخطوة رقم ${ar(got.length + 1)}؟ دوس عليها`}</Bubble>
-      <div className="card" style={{ position: 'relative', padding: 10, display: 'flex', flexDirection: 'column', gap: 6, background: '#F4FBF7' }}>
+      <div className="card" style={{ position: 'relative', padding: n > 8 ? 8 : 10, display: 'flex', flexDirection: 'column', gap: n > 8 ? 4 : 6, background: '#F4FBF7' }}>
         {steps.map((t, k) => (
-          <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 40, borderRadius: 14, padding: '4px 8px', background: k < got.length ? '#fff' : 'transparent', border: k < got.length ? 0 : '2px dashed #CDE9DA' }}>
-            <span className="num" style={{ '--c': k < got.length ? COL[k % 6] : '#CDE9DA', width: 30, height: 30, fontSize: 15 }}>{ar(k + 1)}</span>
+          <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: n > 8 ? 30 : 40, borderRadius: 14, padding: n > 8 ? '1px 8px' : '4px 8px', background: k < got.length ? '#fff' : 'transparent', border: k < got.length ? 0 : '2px dashed #CDE9DA' }}>
+            <span className="num" style={{ '--c': k < got.length ? COL[k % 6] : '#CDE9DA', width: n > 8 ? 26 : 30, height: n > 8 ? 26 : 30, fontSize: 14 }}>{ar(k + 1)}</span>
             {k < got.length && <motion.span initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} style={{ fontSize: 18, fontWeight: 800 }}>{t}</motion.span>}
           </div>
         ))}
@@ -64,7 +69,7 @@ export function OrderGame({ back, age }) {
         <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
           {pool.filter((x) => !got.includes(x.i)).map((x) => (
             <motion.button key={x.i} type="button" onClick={() => tap(x)} animate={bad === x.i ? { x: [0, -10, 10, -6, 6, 0] } : {}} transition={{ duration: 0.4 }}
-              style={{ border: 0, borderRadius: 20, padding: '10px 16px', fontFamily: 'inherit', fontSize: 18, fontWeight: 800, cursor: 'pointer', color: '#26336B', background: bad === x.i ? '#FFD9D2' : '#fff', boxShadow: '0 5px 0 #E2DACB' }}>{x.t}</motion.button>
+              style={{ border: 0, borderRadius: 20, padding: n > 8 ? '8px 12px' : '10px 16px', fontFamily: 'inherit', fontSize: n > 8 ? 16 : 18, fontWeight: 800, cursor: 'pointer', color: '#26336B', background: bad === x.i ? '#FFD9D2' : '#fff', boxShadow: '0 5px 0 #E2DACB' }}>{x.t}</motion.button>
           ))}
         </div>
       )}

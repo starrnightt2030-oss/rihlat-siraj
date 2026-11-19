@@ -5,6 +5,7 @@ import { STORIES } from './stories.js';
 import { SPARKS, STICKER_NAMES } from './content.js';
 import { GIFTS } from './gifts.js';
 import { ADHKAR, dhikrLine } from './adhkar.js';
+import { SCRIPT } from '../screens/onboard-script.js';
 export const giftLine = (g) => 'هدية النهارده: ' + g.t + '. ' + g.sub;
 
 export const stepLine = (s) => {
@@ -52,6 +53,7 @@ export function allLines() {
     L.add('دلوقتي وقت ' + sec.title); L.add('ما شاء الله! خلّصت ' + sec.title);
     sec.items.forEach((d) => { L.add(dhikrLine(d)); if (sec.id === 'hisn') L.add(d.title + '… أقول إيه؟'); });
   }
+  for (const m of SCRIPT) for (const pp of [{ age: '4-6', gender: 'boy' }, { age: '7-9', gender: 'girl' }, { age: '10-12' }]) { const v = typeof m.say === 'function' ? m.say(pp) : m.say || (typeof m.t === 'string' ? m.t : ''); if (v) L.add(v); }
   L.add('لسه مستخبي… كمّل رحلتك'); L.add('كل درس وحكاية بيزوّدوا نور الجرة');
   return [...L].filter(Boolean);
 }
