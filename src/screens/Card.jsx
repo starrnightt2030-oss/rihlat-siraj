@@ -123,7 +123,7 @@ function Step({ s, u, g }) {
         {s.n && <span className="num" style={{ '--c': u.color, position: 'absolute', top: 10, right: 10 }}>{ar(s.n)}</span>}
         {s.count && <span style={{ position: 'absolute', top: 12, left: 12, background: '#2E9BC9', color: '#fff', borderRadius: 14, padding: '2px 12px', fontSize: 15, fontWeight: 800 }}>{s.count}</span>}
         <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 16 }} style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-          <Art a={s.k === 'pose' ? { kid: s.pose } : s.k === 'wudu' ? { wudu: s.step } : { scene: s.scene }} g={g} size={s.k === 'scene' ? 240 : 190} />
+          <Art a={s.k === 'pose' ? { kid: s.pose } : s.k === 'wudu' ? { wudu: s.step } : { scene: s.scene }} g={g} size={s.k === 'scene' ? 270 : s.k === 'wudu' ? 250 : 240} />
         </motion.div>
         {s.name && <span className="ribbon" style={{ '--c': u.color, fontSize: 19, marginTop: 6 }}>{s.name}</span>}
       </div>

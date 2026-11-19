@@ -70,6 +70,10 @@ export default function Parent({ go, back }) {
             <Toggle k="voice" t="صوت سراج (قراءة الكلام)" />
             <Toggle k="quran" t="تلاوة الشيخ للآيات" />
             <ReciterRow />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '10px 4px' }}>
+              <span style={{ fontSize: 17, fontWeight: 800 }}>سرعة كلام سراج</span>
+              <div style={{ display: 'flex', gap: 4 }}>{[[0.75, 'بطيء'], [0.85, 'هادي'], [1, 'عادي']].map(([v, t]) => <button key={v} type="button" onClick={() => s.setSetting('vrate', v)} style={{ border: 0, borderRadius: 12, padding: '4px 10px', fontFamily: 'inherit', fontWeight: 800, cursor: 'pointer', color: (s.settings.vrate || 0.85) === v ? '#fff' : '#2A6FBB', background: (s.settings.vrate || 0.85) === v ? '#3A8FE0' : '#EAF2FD' }}>{t}</button>)}</div>
+            </div>
             <Toggle k="motion" t="الحركة والمؤثرات" />
           </div>
           <div className="card" style={{ position: 'relative', padding: 14, fontSize: 15, lineHeight: 1.7, color: '#5D6CA0', fontWeight: 600 }}>

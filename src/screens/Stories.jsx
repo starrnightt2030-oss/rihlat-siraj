@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sky from '../components/Sky';
+import StoryArt from '../art/StoryArt';
 import Siraj from '../components/Siraj';
 import Reward from '../components/Reward';
 import { Btn, Bubble, IconBtn, Icon, I, StarsChip, HomeBtn } from '../components/ui';
@@ -96,12 +97,12 @@ function Player({ id, go, back }) {
           <AnimatePresence mode="wait">
             <motion.div key={i + (choice ? 'c' : '')} initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}
               className="card" style={{ position: 'relative', aspectRatio: '1.2', overflow: 'hidden', padding: 0, borderColor: '#fff', borderWidth: 5, flexShrink: 0 }}>
-              <motion.img src={A(choice ? choice.img : sc.bg)} alt="" animate={{ scale: [1, 1.06] }} transition={{ duration: 9, ease: 'linear' }}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: choice?.good ? 'contain' : 'cover', background: choice?.good ? 'radial-gradient(#FFF6CC,#FFE38A)' : undefined }} />
-              {!choice && (sc.el || []).map((e, k) => (
+              {sc.art && !choice ? <StoryArt id={sc.art} /> : <motion.img src={A(choice ? choice.img : sc.bg)} alt="" animate={{ scale: [1, 1.06] }} transition={{ duration: 9, ease: 'linear' }}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: choice?.good ? 'contain' : 'cover', background: choice?.good ? 'radial-gradient(#FFF6CC,#FFE38A)' : undefined }} />}
+              {!choice && !sc.art && (sc.el || []).map((e, k) => (
                 <motion.img key={k} src={A(e.img)} alt="" {...ANIM[e.anim]} style={{ position: 'absolute', width: `${e.w}%`, left: `${e.x}%`, top: `${e.y}%`, filter: 'drop-shadow(0 8px 12px rgba(0,0,0,.25))' }} />
               ))}
-              {sc.fx === 'storm' && !choice && <motion.div aria-hidden="true" animate={{ opacity: [0, 0, 0.8, 0, 0.5, 0] }} transition={{ duration: 4, repeat: Infinity }} style={{ position: 'absolute', inset: 0, background: '#fff' }} />}
+              {sc.fx === 'storm' && !choice && !sc.art && <motion.div aria-hidden="true" animate={{ opacity: [0, 0, 0.8, 0, 0.5, 0] }} transition={{ duration: 4, repeat: Infinity }} style={{ position: 'absolute', inset: 0, background: '#fff' }} />}
             </motion.div>
           </AnimatePresence>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: 6 }}>

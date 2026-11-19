@@ -30,6 +30,9 @@ function playList(urls, my) {
   const it = typeof urls[0] === 'string' ? { url: urls[0] } : urls[0];
   ayahNow((it.url.match(/(\d{6})\.mp3$/) || [])[1] || null);
   const a = player(); a.src = it.url;
+  // صوت سراج بيتبطّأ شوية (من غير ما نبرة الصوت تتغير)، والقرآن بسرعة الشيخ الطبيعية
+  const rate = it.url.includes('/audio/voice/') ? (useStore.getState().settings.vrate || 0.85) : 1;
+  try { a.preservesPitch = true; a.defaultPlaybackRate = rate; a.playbackRate = rate; } catch (e) { /* */ }
   a.onended = () => {
     if (my !== token) return;
     if (!it.gap) return playList(urls.slice(1), my);
@@ -61,7 +64,7 @@ export function say(text, after = []) {
   try {
     if (!tvoice) pick();
     if (!tvoice || !window.speechSynthesis) { playList(ayat, my); return; }
-    const u = new SpeechSynthesisUtterance(text.replace(/[«»﴿﴾]/g, '')); u.voice = tvoice; u.lang = tvoice.lang; u.rate = 0.92; u.pitch = 1.2;
+    const u = new SpeechSynthesisUtterance(text.replace(/[«»﴿﴾]/g, '')); u.voice = tvoice; u.lang = tvoice.lang; u.rate = 0.85; u.pitch = 1.2;
     u.onend = () => playList(ayat, my);
     window.speechSynthesis.speak(u);
   } catch (e) { playList(ayat, my); }
