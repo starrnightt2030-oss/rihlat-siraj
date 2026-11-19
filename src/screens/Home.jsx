@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { syncReminders } from '../lib/remind';
 import { today } from '../data/gifts';
 import Sky from '../components/Sky';
-import { StarsChip, LightChip } from '../components/ui';
+import { StarsChip, LightChip, Icon, I } from '../components/ui';
 import DIcon from '../art/Icons';
 import Scene from '../art/Scenes';
 import { BUDDY } from '../components/Siraj';
@@ -45,6 +45,7 @@ export default function Home({ go }) {
         <img src={A(BUDDY[profile?.buddy || 'siraj'].face)} alt="" style={{ width: 54, height: 54, borderRadius: 27, background: '#fff', objectFit: 'contain', boxShadow: '0 4px 0 #E8E0D0' }} />
         <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 700, color: '#5D6CA0' }}>{hi}</div><div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.1 }}>يا {profile?.name}</div></div>
         <LightChip /><StarsChip />
+        <button type="button" onClick={() => { sfx.tap(); go('parent'); }} aria-label="ركن ولي الأمر" style={{ width: 46, height: 46, flexShrink: 0, borderRadius: 23, border: 0, cursor: 'pointer', background: '#fff', color: '#5D6CA0', display: 'grid', placeItems: 'center', boxShadow: '0 4px 0 #E8E0D0' }}><Icon d={I.gear} size={24} color="#5D6CA0" /></button>
       </div>
 
       <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => { sfx.pop(); go('island'); }} className="card"
@@ -73,6 +74,17 @@ export default function Home({ go }) {
           </motion.button>
         ))}
       </div>
+
+      {/* ركن ولي الأمر: باين وواضح في آخر الصفحة */}
+      <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => { sfx.tap(); go('parent'); }} className="card"
+        style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12, border: '2px dashed #B9C6E4', padding: '12px 14px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'right', background: '#F7F9FF', color: '#26336B' }}>
+        <span style={{ width: 52, height: 52, borderRadius: 16, background: '#5D6CA0', display: 'grid', placeItems: 'center', flexShrink: 0 }}><Icon d={I.lock} size={26} color="#fff" /></span>
+        <span style={{ flex: 1 }}>
+          <span style={{ display: 'block', fontSize: 18, fontWeight: 800 }}>ركن ولي الأمر</span>
+          <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#6D7896' }}>الإعدادات والتقدّم والتذكير والقارئ وسرعة الصوت</span>
+        </span>
+        <span style={{ fontSize: 20, color: '#5D6CA0' }}>◀</span>
+      </motion.button>
     </div>
   );
 }

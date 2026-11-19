@@ -1,5 +1,6 @@
 // التعارف: سراج وبشير ومشمش بيعرّفوا نفسهم ويدردشوا مع الطفل زي الشات
 import { useEffect, useRef, useState } from 'react';
+import { KidPortrait } from '../art/Wudu';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import { BUDDY } from '../components/Siraj';
@@ -57,7 +58,7 @@ export default function Onboard({ go, back }) {
     setTimeout(() => setI((x) => x + 1), 500);
   };
   const finish = () => { setProfile({ ...p, name: p.name.trim(), buddy: p.buddy || 'siraj' }); sfx.good(); go('home'); };
-  const avatar = p.gender === 'girl' ? 'characters/children/girl' : p.gender === 'boy' ? 'characters/children/boy' : null;
+  const avatar = p.gender === 'girl' || p.gender === 'boy' ? p.gender : null;
 
   return (
     <div className="screen" style={{ gap: 10, paddingBottom: 'calc(var(--safe-bottom) + 12px)' }}>
@@ -72,7 +73,7 @@ export default function Onboard({ go, back }) {
       <div ref={box} style={{ position: 'relative', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, padding: '4px 2px 10px' }}>
         {log.map((m, k) => m.me ? (
           <motion.div key={k} initial={{ scale: 0.7, opacity: 0, x: -20 }} animate={{ scale: 1, opacity: 1, x: 0 }} style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'flex-end', gap: 6, flexDirection: 'row-reverse' }}>
-            {avatar ? <img src={A(avatar)} alt="" style={{ width: 40, height: 40, borderRadius: 20, objectFit: 'cover', objectPosition: 'top', background: '#fff' }} /> : <span style={{ width: 40, height: 40, borderRadius: 20, background: '#3A8FE0', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 800 }}>{p.name.slice(0, 1) || '؟'}</span>}
+            {avatar ? <span style={{ width: 40, height: 40, borderRadius: 20, overflow: 'hidden', flexShrink: 0, background: '#fff' }}><KidPortrait g={avatar} size={40} wave={false} /></span> : <span style={{ width: 40, height: 40, borderRadius: 20, background: '#3A8FE0', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 800 }}>{p.name.slice(0, 1) || '؟'}</span>}
             <div style={{ background: '#3A8FE0', color: '#fff', borderRadius: '20px 20px 20px 6px', padding: '8px 14px', fontSize: 19, fontWeight: 800, maxWidth: 240 }}>{m.t}</div>
           </motion.div>
         ) : (
@@ -106,7 +107,7 @@ export default function Onboard({ go, back }) {
                 {[{ id: 'boy', t: 'ولد', img: 'characters/children/boy', c: '#3FA9F5' }, { id: 'girl', t: 'بنت', img: 'characters/children/girl', c: '#FF8FC8' }].map((g) => (
                   <motion.button key={g.id} type="button" whileTap={{ scale: 0.95 }} onClick={() => answer('gender', g.id)} className="card"
                     style={{ padding: 8, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, border: `4px solid ${g.c}`, background: `linear-gradient(180deg, ${g.c}22, #fff 70%)`, fontFamily: 'inherit' }}>
-                    <img src={A(g.img)} alt="" style={{ height: 130, objectFit: 'contain' }} /><span style={{ fontSize: 24, fontWeight: 800, color: '#26336B' }}>{g.t}</span>
+                    <KidPortrait g={g.id} size={130} /><span style={{ fontSize: 24, fontWeight: 800, color: '#26336B' }}>{g.t}</span>
                   </motion.button>
                 ))}
               </div>

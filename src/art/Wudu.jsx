@@ -105,7 +105,7 @@ const Ear = ({ x, y, s }) => (<g>
 // الوش من غير ملامح: بس ظل خفيف للمناخير والخدود
 const FaceSkin = () => (<g>
   <path d={FACE(HX, HY)} fill={`url(#fc)`} stroke={SK.line} strokeWidth="2.6" />
-  <path d={`M${HX - 3} ${HY + 12} Q ${HX} ${HY + 16} ${HX + 4} ${HY + 12}`} stroke={SK.shade} strokeWidth="2" fill="none" strokeLinecap="round" />
+  <ellipse cx={HX + 1} cy={HY + 10} rx="3.2" ry="2.2" fill={SK.shade} opacity=".28" />
   <path d={`M${HX + 1} ${HY - 4} Q ${HX + 3} ${HY + 4} ${HX + 2} ${HY + 9}`} stroke={SK.shade} strokeWidth="1.4" fill="none" opacity=".55" strokeLinecap="round" />
   <ellipse cx={HX - 17} cy={HY + 14} rx="7" ry="4.5" fill={SK.blush} opacity=".35" />
   <ellipse cx={HX + 17} cy={HY + 14} rx="7" ry="4.5" fill={SK.blush} opacity=".35" />
@@ -122,7 +122,7 @@ function HeadFront({ g, bare = false }) {
       <path d={`M${HX + 50} ${HY + 64} Q ${HX + 40} ${HY + 50} ${HX + 38} ${HY + 30}`} fill="none" stroke={C.hijS} strokeWidth="2" />
       <path d={FACE(HX, HY + 2, 0.93)} fill={`url(#fc)`} stroke={SK.line} strokeWidth="2.4" />
       <path d={`M${HX - 29} ${HY - 10} C ${HX - 26} ${HY - 42}, ${HX + 26} ${HY - 42}, ${HX + 29} ${HY - 10}`} fill="none" stroke={C.hijL} strokeWidth="3.2" />
-      <path d={`M${HX - 3} ${HY + 12} Q ${HX} ${HY + 16} ${HX + 4} ${HY + 12}`} stroke={SK.shade} strokeWidth="2" fill="none" strokeLinecap="round" />
+      <ellipse cx={HX + 1} cy={HY + 10} rx="3.2" ry="2.2" fill={SK.shade} opacity=".28" />
       <ellipse cx={HX - 16} cy={HY + 14} rx="6.5" ry="4.2" fill={SK.blush} opacity=".35" /><ellipse cx={HX + 16} cy={HY + 14} rx="6.5" ry="4.2" fill={SK.blush} opacity=".35" />
     </g>);
   }
@@ -352,6 +352,25 @@ const Defs = ({ g }) => {
     <linearGradient id="mt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#9AA8BD" /><stop offset=".5" stopColor="#EEF2F7" /><stop offset="1" stopColor="#9AA8BD" /></linearGradient>
   </defs>);
 };
+
+// صورة الطفل (للتعارف وغيره): نفس الطفل الواقعي من غير ملامح، بيسلّم بإيده
+export function KidPortrait({ g = 'boy', size = 120, wave = true, bg = true }) {
+  const gg = g === 'girl' ? 'girl' : 'boy', id = 'kp' + gg;
+  return (
+    <svg viewBox="28 18 184 196" width={size} height={size * 196 / 184} role="img" aria-label={gg === 'girl' ? 'بنت' : 'ولد'} style={{ display: 'block' }}>
+      <Defs g={gg} />
+      <clipPath id={id}><circle cx="120" cy="116" r="92" /></clipPath>
+      {bg && <circle cx="120" cy="116" r="92" fill={gg === 'girl' ? '#FFE3EF' : '#DDF0FF'} />}
+      <g clipPath={`url(#${id})`}>
+        {bg && [0, 1, 2, 3, 4, 5].map((k) => <path key={k} d={`M120 116 L${120 + Math.cos(k * 1.05) * 140} ${116 + Math.sin(k * 1.05) * 140} L${120 + Math.cos(k * 1.05 + 0.3) * 140} ${116 + Math.sin(k * 1.05 + 0.3) * 140}z`} fill="#fff" opacity=".35" />)}
+        <Torso g={gg} />
+        <HeadFront g={gg} />
+        {wave && <Arm g={gg} S={SL} E={[HX + 60, HY + 80]} W={[HX + 56, HY + 30]} hand={{ ang: -80, mode: 'open', flip: true }} rolled={false} />}
+      </g>
+      {bg && <circle cx="120" cy="116" r="91" fill="none" stroke="#fff" strokeWidth="5" />}
+    </svg>
+  );
+}
 
 export default function Wudu({ step = 'hands', g = 'boy', size = 200 }) {
   const gg = g === 'girl' ? 'girl' : 'boy';
