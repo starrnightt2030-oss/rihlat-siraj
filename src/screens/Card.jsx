@@ -10,6 +10,9 @@ import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say, hush, recite } from '../lib/voice';
 import { stepLine } from '../data/speech';
+import Art from '../art';
+import Practice, { PRACTICE } from '../components/Practice';
+import { RAKAT } from '../data/units';
 
 const tashkeel = (t) => (t.match(/[\u064B-\u0652]/g) || []).length >= 3;
 const TILE = ['#FFF3D6', '#E6F6EE', '#FFEAF2', '#E6F0FF', '#F1ECFF', '#E3F6FA'];
@@ -25,6 +28,10 @@ export default function Card({ arg, go, back }) {
   const [phase, setPhase] = useState('learn');
   const [pick, setPick] = useState(null), [miss, setMiss] = useState(0), [res, setRes] = useState(null);
   const step = c.steps[i];
+  const g = useStore((st) => st.profile?.gender) === 'girl' ? 'girl' : 'boy';
+  const [solved, setSolved] = useState(false);
+  useEffect(() => setSolved(false), [i]);
+  const locked = phase === 'learn' && PRACTICE.has(step.k) && !solved;
   const total = c.steps.length + 1;
   const pos = phase === 'learn' ? i + 1 : total;
   useEffect(() => () => hush(), []);
@@ -57,8 +64,8 @@ export default function Card({ arg, go, back }) {
 
       <AnimatePresence mode="wait">
         {phase === 'learn' && (
-          <motion.div key={i} initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 40 }} transition={{ duration: 0.28 }} style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Step s={step} u={u} />
+          <motion.div data-step key={i} initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 40 }} transition={{ duration: 0.28 }} style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {PRACTICE.has(step.k) ? <Practice s={step} u={u} g={g} onSolve={() => setSolved(true)} /> : <Step s={step} u={u} g={g} />}
           </motion.div>
         )}
         {phase === 'quiz' && (
@@ -99,7 +106,7 @@ export default function Card({ arg, go, back }) {
         <div style={{ position: 'relative', display: 'flex', gap: 10, alignItems: 'center' }}>
           <IconBtn icon={I.sound} label="اسمع تاني" sound="tap" color={u.dark} onClick={() => speak(step)} style={{ width: 60, height: 60, borderRadius: 30 }} />
           {i > 0 && <IconBtn icon={I.back} label="اللي قبله" onClick={() => setI(i - 1)} style={{ width: 60, height: 60, borderRadius: 30, transform: 'scaleX(-1)' }} />}
-          <Btn className="block" sound="" onClick={next} style={{ flex: 1, '--c': u.color, '--d': u.dark, '--t': '#fff', minHeight: 62 }}>{i < c.steps.length - 1 ? 'التالي' : 'يلا نجرّب!'}</Btn>
+          <Btn className="block" sound="" disabled={locked} onClick={() => !locked && next()} style={{ flex: 1, '--c': locked ? '#C9D1DE' : u.color, '--d': locked ? '#AAB4C4' : u.dark, '--t': '#fff', minHeight: 62 }}>{locked ? 'حلّ التمرين الأول' : i < c.steps.length - 1 ? 'التالي' : 'يلا نجرّب!'}</Btn>
         </div>
       )}
 
@@ -108,7 +115,40 @@ export default function Card({ arg, go, back }) {
   );
 }
 
-function Step({ s, u }) {
+function Step({ s, u, g }) {
+  if (s.k === 'pose' || s.k === 'wudu' || s.k === 'scene') return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="card" style={{ position: 'relative', padding: '14px 10px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', background: u.soft }}>
+        {s.n && <span className="num" style={{ '--c': u.color, position: 'absolute', top: 10, right: 10 }}>{ar(s.n)}</span>}
+        {s.count && <span style={{ position: 'absolute', top: 12, left: 12, background: '#2E9BC9', color: '#fff', borderRadius: 14, padding: '2px 12px', fontSize: 15, fontWeight: 800 }}>{s.count}</span>}
+        <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 16 }} style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+          <Art a={s.k === 'pose' ? { kid: s.pose } : s.k === 'wudu' ? { wudu: s.step } : { scene: s.scene }} g={g} size={s.k === 'scene' ? 240 : 190} />
+        </motion.div>
+        {s.name && <span className="ribbon" style={{ '--c': u.color, fontSize: 19, marginTop: 6 }}>{s.name}</span>}
+      </div>
+      {s.girl && g === 'girl' && <div className="card" style={{ padding: '8px 12px', fontSize: 16, fontWeight: 800, color: '#B8437C', background: '#FFF0F6' }}>{s.girl}</div>}
+      {s.dhikr && <div className="card dash" style={{ '--c': '#9FD3B6', padding: '8px 12px', textAlign: 'center', background: '#F4FBF7' }}><div style={{ fontSize: 13, fontWeight: 800, color: '#2FB383' }}>نقول</div><div className="ayah" style={{ fontSize: 23, color: '#1F7A55' }}>{s.dhikr}</div></div>}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
+        <Siraj pose="wave" size={80} />
+        <Bubble tail="r" style={{ flex: 1, fontSize: 18, marginBottom: 8, lineHeight: 1.5 }}>{s.t}</Bubble>
+      </div>
+    </div>
+  );
+  if (s.k === 'rakat') return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ textAlign: 'center' }}><span className="ribbon" style={{ '--c': u.color, fontSize: 18 }}>كل صلاة كام ركعة؟</span></div>
+      {RAKAT.map(([name, n, time, ic], k) => (
+        <motion.div key={name} initial={{ x: -30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.1 + k * 0.12 }} className="card"
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: TILE[k % 6], boxShadow: `0 5px 0 ${TILE_C[k % 6]}33` }}>
+          <span style={{ fontSize: 26 }} aria-hidden>{ic}</span>
+          <div style={{ flex: 1 }}><div style={{ fontSize: 21, fontWeight: 800 }}>{name}</div><div style={{ fontSize: 13, fontWeight: 700, color: TILE_C[k % 6] }}>{time}</div></div>
+          <div style={{ display: 'flex', gap: 4 }} aria-label={`${n} ركعات`}>{Array.from({ length: n }).map((_, j) => <motion.span key={j} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4 + k * 0.12 + j * 0.08 }} style={{ width: 20, height: 26, borderRadius: '10px 10px 6px 6px', background: TILE_C[k % 6] }} />)}</div>
+          <span className="num" style={{ '--c': TILE_C[k % 6] }}>{ar(n)}</span>
+        </motion.div>
+      ))}
+      <div className="card" style={{ padding: '8px 12px', textAlign: 'center', fontSize: 16, fontWeight: 800, color: u.dark }}>المجموع <bdi>{ar(17)}</bdi> ركعة كل يوم</div>
+    </div>
+  );
   if (s.k === 'say') return (
     <>
       <div className="card" style={{ padding: 6, overflow: 'hidden', flexShrink: 0 }}>
