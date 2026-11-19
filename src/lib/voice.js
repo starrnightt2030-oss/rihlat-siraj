@@ -3,6 +3,7 @@
 import { useStore } from '../store';
 import { lineHash } from './hash';
 import { reciterById } from '../data/reciters';
+import { nameLine } from '../data/names';
 
 // دور الطفل في الترديد: الشاشة بتسمع هنا عشان تظهر «دورك»
 const subs = new Set();
@@ -58,20 +59,34 @@ const ayatOf = (codes, st) => {
 };
 
 // say(كلام قبل، آيات، كلام بعد): مثلًا «ربنا قال…» ← الشيخ يقرا ← «يعني…»
-export function say(text, after = [], post = '') {
-  if (man === null) { const my0 = ++token; return ready.then(() => (token === my0 ? say(text, after, post) : undefined)); }
+// opts.name = 'first': سراج ينادي الطفل باسمه الأول (لو اسمه متسجّل)
+export function say(text, after = [], post = '', opts = {}) {
+  if (man === null) { const my0 = ++token; return ready.then(() => (token === my0 ? say(text, after, post, opts) : undefined)); }
   const st = useStore.getState().settings;
   hush(); const my = token;
   const p = new Promise((r) => { finish = r; });
-  speak(text, after, st, my, post);
+  speak(text, after, st, my, post, opts);
   return p;
 }
-function speak(text, after, st, my, post) {
+// كلمات التشجيع: سراج بيضيف اسم الطفل بعدها أحيانًا («برافو!» ← «يا تالين.»)
+const PRAISE = new Set(['شاطر!', 'برافو!', 'شاطر! إجابة صح', 'برافو! إجابة صح', 'برافو! وصّلت كله صح', 'برافو! حفظته صح', 'برافو! الترتيب صح', 'برافو عليك!', 'ذاكرتك نوّرت! برافو', 'الصورة رجعت كاملة! شاطر']);
+let praiseN = 0;
+function nameUrl(n) {
+  const nl = nameLine(n || useStore.getState().profile?.name), f = nl && man?.[lineHash(nl)];
+  return f ? `${BASE}audio/voice/${f}` : null;
+}
+function speak(text, after, st, my, post, opts = {}) {
   const ph = post && st.voice && man?.[lineHash(post)];
   const ayat = [...(st.quran === false ? [] : ayatOf(after, st)), ...(ph ? [`${BASE}audio/voice/${ph}`] : [])];
   if (!st.voice || !text) { playList(ayat, my); return; }
   const h = lineHash(text);
-  if (man?.[h]) { playList([`${BASE}audio/voice/${man[h]}`, ...ayat], my); return; }
+  const nu = st.voice ? nameUrl(opts.n) : null;
+  if (man?.[h]) {
+    const main = `${BASE}audio/voice/${man[h]}`;
+    if (nu && opts.name === 'first') { playList([nu, main, ...ayat], my); return; }
+    if (nu && PRAISE.has(text) && praiseN++ % 2 === 0) { playList([main, nu, ...ayat], my); return; }
+    playList([main, ...ayat], my); return;
+  }
   try {
     if (!tvoice) pick();
     if (!tvoice || !window.speechSynthesis) { playList(ayat, my); return; }
@@ -83,7 +98,7 @@ function speak(text, after, st, my, post) {
 export const recite = (codes) => say('', codes);
 // جملة ترحيب للشاشة: once = مرة واحدة بس في الجلسة
 const heard = new Set();
-export function hubSay(line, once = false) {
+export function hubSay(line, once = false, opts = {}) {
   if (!line || (once && heard.has(line))) return;
-  heard.add(line); setTimeout(() => say(line), 350);
+  heard.add(line); setTimeout(() => say(line, [], '', opts), 350);
 }

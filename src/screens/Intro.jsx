@@ -30,7 +30,7 @@ export default function Intro({ onDone, profile }) {
   const ids = useRef([]), spoke = useRef(false);
   const k = back ? 0.75 : 1; // اللي راجع: نفس الانترو أسرع شوية
   const at = (ms, f) => ids.current.push(setTimeout(f, ms * k));
-  const speak = () => { if (!spoke.current) { spoke.current = true; say(line); } };
+  const speak = () => { if (!spoke.current) { spoke.current = true; say(line, [], '', back ? { name: 'first' } : {}); } };
   useEffect(() => {
     at(250, () => { setT(1); sfx.whoosh(); });
     at(1050, () => { setT(2); sfx.reveal(); });

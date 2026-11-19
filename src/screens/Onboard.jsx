@@ -41,7 +41,7 @@ export default function Onboard({ go, back }) {
       setLog((l) => [...l, { who: m.who, t: textOf(m, pp) }]);
       sfx.pop();
       const t0 = Date.now(), min = Math.min(4000, 900 + textOf(m, pp).length * 35);
-      const spoken = Promise.race([say(sayOf(m, pp)) || Promise.resolve(), new Promise((r) => setTimeout(r, 20000))]);
+      const spoken = Promise.race([say(sayOf(m, pp), [], '', m.nm ? { name: 'first', n: pp.name } : {}) || Promise.resolve(), new Promise((r) => setTimeout(r, 20000))]);
       if (m.ask) setWait(m.ask);
       else if (m.end) setWait('end');
       // الرسالة اللي بعدها تستنى الجملة دي تخلص كلها (ومش أقل من وقت كفاية للقراية)
