@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import StoryArt from '../art/StoryArt';
+import { ReciterChip } from '../components/Reciter';
 import Siraj from '../components/Siraj';
 import Reward from '../components/Reward';
 import { Btn, Bubble, IconBtn, Icon, I, StarsChip, HomeBtn } from '../components/ui';
@@ -65,7 +66,7 @@ function Player({ id, go, back }) {
   const sc = S.scenes[i];
   const cu = cardById(id)?.unit; const region = cu ? { name: cu.title } : { name: 'بحر الحكايات' };
   const line = choice ? choice.res : sc.t;
-  useEffect(() => { if (phase === 'story') say(choice ? choice.res : sc.t, !choice && sc.aud ? [sc.aud] : []); if (phase === 'moral') say(S.moral); if (phase === 'quiz') say(S.quiz[q].q); }, [i, phase, choice, q]);
+  useEffect(() => { if (phase === 'story') say(choice ? choice.res : sc.t, !choice && sc.aud ? [].concat(sc.aud) : []); if (phase === 'moral') say(S.moral); if (phase === 'quiz') say(S.quiz[q].q); }, [i, phase, choice, q]);
   useEffect(() => () => hush(), []);
 
   const next = () => {
@@ -109,9 +110,9 @@ function Player({ id, go, back }) {
             <img src={A('characters/siraj/face_happy')} alt="سراج" style={{ width: 58, height: 58, objectFit: 'contain', flexShrink: 0 }} />
             <Bubble tail="r" style={{ flex: 1, fontSize: 20 }}>
               {choice ? choice.res : sc.t}
-              {sc.ayah && !choice && <div style={{ marginTop: 8, fontFamily: "'Amiri', serif", fontSize: 24, color: '#0B6E8A', textAlign: 'center', lineHeight: 1.8 }}>﴿{sc.ayah}﴾<div style={{ fontSize: 13, color: '#5D6CA0', fontFamily: 'inherit' }}>{sc.ref}</div></div>}
+              {sc.ayah && !choice && <div style={{ marginTop: 8, fontFamily: "'Amiri', serif", fontSize: sc.ayah.length > 90 ? 19 : 24, color: '#0B6E8A', textAlign: 'center', lineHeight: 1.8 }}>﴿{sc.ayah}﴾<div style={{ fontSize: 13, color: '#5D6CA0', fontFamily: 'inherit' }}>{sc.ref}</div>{sc.aud && <div style={{ marginTop: 6, fontFamily: "'Baloo Bhaijaan 2'" }}><ReciterChip codes={[].concat(sc.aud)} color="#0B6E8A" /></div>}</div>}
             </Bubble>
-            <IconBtn icon={I.sound} label="اسمع تاني" sound="tap" onClick={() => say(line, !choice && sc.aud ? [sc.aud] : [])} color="#0B9A92" />
+            <IconBtn icon={I.sound} label="اسمع تاني" sound="tap" onClick={() => say(line, !choice && sc.aud ? [].concat(sc.aud) : [])} color="#0B9A92" />
           </div>
           {sc.choose && !choice?.good && (
             <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10 }}>

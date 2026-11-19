@@ -18,7 +18,7 @@ import { RAKAT } from '../data/units';
 const tashkeel = (t) => (t.match(/[\u064B-\u0652]/g) || []).length >= 3;
 const TILE = ['#FFF3D6', '#E6F6EE', '#FFEAF2', '#E6F0FF', '#F1ECFF', '#E3F6FA'];
 const TILE_C = ['#F5A623', '#2FB383', '#E0609E', '#3A8FE0', '#7B5CE0', '#1F8FA6'];
-const audOf = (s) => s.k === 'ayah' && s.aud ? [s.aud] : s.k === 'surah' ? s.verses.map((_, k) => s.sura + String(k + 1).padStart(3, '0')) : [];
+const audOf = (s) => s.k === 'ayah' && s.aud ? [].concat(s.aud) : s.k === 'surah' ? s.verses.map((_, k) => s.sura + String(k + 1).padStart(3, '0')) : [];
 const speak = (s) => say(stepLine(s), audOf(s));
 
 export default function Card({ arg, go, back }) {
@@ -169,7 +169,7 @@ function Step({ s, u, g }) {
           <span className="ribbon" style={{ '--c': ay ? '#FF89B5' : '#2FB383', fontSize: 15 }}>{ay ? 'ربنا قال في القرآن' : 'النبي ﷺ علّمنا'}</span>
           <div className="ayah" style={{ fontSize: ay ? 32 : 26, color: ay ? '#B03A64' : '#1F7A55', margin: '10px 0 4px' }}>{ay ? `﴿${s.t}﴾` : `«${s.t}»`}</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#7A6A70' }}>{s.ref}</div>
-          {s.aud && <div style={{ marginTop: 8 }}><ReciterChip codes={[s.aud]} /></div>}
+          {s.aud && <div style={{ marginTop: 8 }}><ReciterChip codes={[].concat(s.aud)} /></div>}
         </div>
         {s.mean && (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
