@@ -38,10 +38,13 @@ export default function Onboard({ go, back }) {
       setTyping(false);
       const pp = pRef.current;
       setLog((l) => [...l, { who: m.who, t: textOf(m, pp) }]);
-      say(sayOf(m, pp)); sfx.pop();
+      sfx.pop();
+      const t0 = Date.now(), min = Math.min(4000, 900 + textOf(m, pp).length * 35);
+      const spoken = Promise.race([say(sayOf(m, pp)) || Promise.resolve(), new Promise((r) => setTimeout(r, 20000))]);
       if (m.ask) setWait(m.ask);
       else if (m.end) setWait('end');
-      else { const ms = Math.min(6500, 1300 + textOf(m, pp).length * 55); setTimeout(() => setI((x) => x + 1), ms); }
+      // الرسالة اللي بعدها تستنى الجملة دي تخلص كلها (ومش أقل من وقت كفاية للقراية)
+      else spoken.then(() => setTimeout(() => setI((x) => x + 1), Math.max(450, min - (Date.now() - t0))));
     }, i === 0 ? 700 : 900);
     return () => clearTimeout(t1);
   }, [i]);

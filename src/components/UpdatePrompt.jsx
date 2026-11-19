@@ -8,12 +8,13 @@ import { sfx } from '../lib/sound';
 import { ar } from '../lib/asset';
 
 const SKIP = 'siraj-upd-skip'; // «بعدين» بتأجّل لحد الفتحة الجاية بس
-const mb = (b) => (b ? ar((b / 1048576).toFixed(0)) + ' ميجا' : '');
+const mb = (b) => (b ? ar(Math.round(b / 1048576)) + ' ميجا' : '');
 
 export default function UpdatePrompt() {
   const [info, setInfo] = useState(null);
   const [st, setSt] = useState('ask'); // ask | down | ready | fail
   const [pct, setPct] = useState(0);
+  const [got, setGot] = useState([0, 0]);
   const [file, setFile] = useState(null);
   useEffect(() => {
     let last = 0, alive = true;
@@ -38,8 +39,9 @@ export default function UpdatePrompt() {
   const go = async () => {
     sfx.pop();
     if (!NATIVE) { location.reload(); return; }
-    setSt('down'); setPct(0);
-    try { const p = await downloadUpdate(info.latest, setPct); setFile(p); setSt('ready'); sfx.good?.(); await installUpdate(p); }
+    if (st === 'down') return;
+    setSt('down'); setPct(0); setGot([0, info.size || 0]);
+    try { const p = await downloadUpdate(info.latest, info.size || 0, (f, b, t) => { setPct(f); setGot([b, t]); }); setFile(p); setSt('ready'); sfx.good?.(); await installUpdate(p).catch(() => {}); }
     catch (e) { setSt('fail'); }
   };
   const install = async () => { try { await installUpdate(file); } catch (e) { setSt('fail'); } };
@@ -76,16 +78,17 @@ export default function UpdatePrompt() {
               )}
               {st === 'down' && (
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#6D7896', marginBottom: 6 }}><span>بنحمّل التحديث…</span><bdi>{ar(Math.round(pct * 100))}٪</bdi></div>
-                  <div className="progress" style={{ height: 14 }}><i style={{ width: `${Math.max(4, pct * 100)}%`, background: 'linear-gradient(90deg,#2FB383,#4ED7A3)', transition: 'width .2s' }} /></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#6D7896', marginBottom: 6 }}><span>بنحمّل التحديث… {got[1] ? <bdi>{mb(got[0])} من {mb(got[1])}</bdi> : null}</span><bdi>{ar(Math.round(pct * 100))}٪</bdi></div>
+                  <div className="progress" style={{ height: 14 }}><i style={{ width: `${Math.max(4, pct * 100)}%`, background: 'linear-gradient(90deg,#2FB383,#4ED7A3)', transition: 'width .35s linear' }} /></div>
                 </div>
               )}
               {st === 'ready' && <div style={{ fontSize: 15, fontWeight: 700, color: '#1F8A61', lineHeight: 1.6 }}>التحديث جاهز! اضغط «تثبيت» في الشاشة اللي هتظهر. لو أول مرة، الموبايل هيطلب تسمح لـ«رحلة سراج» تثبّت التحديثات. نجوم البطل وتقدّمه هيفضلوا زي ما هم.</div>}
-              {st === 'fail' && <div style={{ fontSize: 15, fontWeight: 700, color: '#B85A2E', lineHeight: 1.6 }}>التحميل ما كملش. ممكن نحمّله من المتصفح بدل كده.</div>}
+              {st === 'fail' && <div style={{ fontSize: 15, fontWeight: 700, color: '#B85A2E', lineHeight: 1.6 }}>التحميل ما كملش (ممكن النت فصل). جرّب تاني، أو حمّله من المتصفح.</div>}
               {st === 'ask' && <Btn className="block" tone="leaf" onClick={go} style={{ minHeight: 60, fontSize: 22 }}>{NATIVE ? 'حدّث دلوقتي' : 'حدّث دلوقتي'}{NATIVE && info.size ? <span style={{ fontSize: 14, opacity: 0.9 }}> · {mb(info.size)}</span> : null}</Btn>}
               {st === 'down' && <Btn className="block" tone="white" disabled style={{ minHeight: 56 }}>ثواني…</Btn>}
               {st === 'ready' && <Btn className="block" tone="leaf" onClick={install} style={{ minHeight: 60, fontSize: 22 }}>تثبيت التحديث</Btn>}
-              {st === 'fail' && <Btn className="block" tone="leaf" onClick={() => openInBrowser(info.latest)} style={{ minHeight: 60 }}>حمّله من المتصفح</Btn>}
+              {st === 'fail' && <Btn className="block" tone="leaf" onClick={go} style={{ minHeight: 60 }}>جرّب تاني</Btn>}
+              {st === 'fail' && <Btn className="block" tone="white" onClick={() => openInBrowser(info.latest)}>حمّله من المتصفح</Btn>}
               {st !== 'down' && <button type="button" onClick={later} style={{ border: 0, background: 'transparent', fontFamily: 'inherit', fontSize: 16, fontWeight: 700, color: '#6D7896', cursor: 'pointer', padding: 4 }}>بعدين</button>}
             </div>
           </motion.div>

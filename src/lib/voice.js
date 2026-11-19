@@ -25,8 +25,11 @@ if (typeof window !== 'undefined' && window.speechSynthesis) { pick(); window.sp
 
 // العنصر: رابط، أو { url, gap: true } يعني بعده وقت للترديد
 let timer = 0;
+// say() بترجع وعد بيخلص لما الكلام يخلص (أو يتقاطع)، عشان الشاشات تستنى الجملة تكمل
+let finish = null;
+const done = () => { const f = finish; finish = null; f?.(); };
 function playList(urls, my) {
-  if (my !== token || !urls.length) { if (my === token) { turn(null); ayahNow(null); } return; }
+  if (my !== token || !urls.length) { if (my === token) { turn(null); ayahNow(null); done(); } return; }
   const it = typeof urls[0] === 'string' ? { url: urls[0] } : urls[0];
   ayahNow((it.url.match(/(\d{6})\.mp3$/) || [])[1] || null);
   const a = player(); a.src = it.url;
@@ -45,7 +48,7 @@ function playList(urls, my) {
   // لو المتصفح منع الصوت قبل أول لمسة، بنشغّله أول ما الطفل يلمس الشاشة
   a.play().catch((e) => { if (e && e.name === 'NotAllowedError') window.addEventListener('pointerdown', () => { if (my === token) a.play().catch(() => {}); }, { once: true }); });
 }
-export function hush() { ayahNow(null); token++; clearTimeout(timer); rest = null; turn(null); try { el?.pause(); } catch (e) {} try { window.speechSynthesis?.cancel(); } catch (e) {} }
+export function hush() { done(); ayahNow(null); token++; clearTimeout(timer); rest = null; turn(null); try { el?.pause(); } catch (e) {} try { window.speechSynthesis?.cancel(); } catch (e) {} }
 // يتخطى وقت الترديد ويكمّل
 let rest = null;
 export function skipTurn() { rest?.(); }
@@ -55,9 +58,14 @@ const ayatOf = (codes, st) => {
 };
 
 export function say(text, after = []) {
-  if (man === null) { const my0 = ++token; ready.then(() => { if (token === my0) say(text, after); }); return; }
+  if (man === null) { const my0 = ++token; return ready.then(() => (token === my0 ? say(text, after) : undefined)); }
   const st = useStore.getState().settings;
   hush(); const my = token;
+  const p = new Promise((r) => { finish = r; });
+  speak(text, after, st, my);
+  return p;
+}
+function speak(text, after, st, my) {
   const ayat = st.quran === false ? [] : ayatOf(after, st);
   if (!st.voice || !text) { playList(ayat, my); return; }
   const h = lineHash(text);
@@ -66,7 +74,7 @@ export function say(text, after = []) {
     if (!tvoice) pick();
     if (!tvoice || !window.speechSynthesis) { playList(ayat, my); return; }
     const u = new SpeechSynthesisUtterance(text.replace(/[«»﴿﴾]/g, '')); u.voice = tvoice; u.lang = tvoice.lang; u.rate = 0.85; u.pitch = 1.2;
-    u.onend = () => playList(ayat, my);
+    u.onend = () => playList(ayat, my); u.onerror = () => playList(ayat, my);
     window.speechSynthesis.speak(u);
   } catch (e) { playList(ayat, my); }
 }

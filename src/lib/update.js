@@ -35,17 +35,38 @@ export async function checkForUpdate() {
   return { current: VERSION, ...r, hasUpdate: cmp(r.latest, VERSION) > 0 };
 }
 
-// على الموبايل: بنحمّل الـ APK جوّه التطبيق ونبيّن التقدّم، وبعدين نفتح شاشة التثبيت على طول
-// لو أي حاجة فشلت بنفتح رابط التحميل في المتصفح كخطة بديلة
-export async function downloadUpdate(v, onProgress) {
-  const { Filesystem, Directory } = await import('@capacitor/filesystem');
-  const name = `rihlat-siraj-${v}.apk`;
-  const h = await Filesystem.addListener('progress', (p) => { if (p.contentLength > 0) onProgress?.(Math.min(1, p.bytes / p.contentLength)); });
-  try {
-    const r = await Filesystem.downloadFile({ url: apkUrl(v), path: name, directory: Directory.Cache, progress: true });
-    onProgress?.(1);
-    return r.path || (await Filesystem.getUri({ path: name, directory: Directory.Cache })).uri;
-  } finally { h.remove(); }
+// على الموبايل: بنحمّل الـ APK جوّه التطبيق (أداة التحميل الرسمية) ونبيّن التقدّم، وبعدين نفتح شاشة التثبيت
+// قبل التثبيت بنتأكد إن الملف اتحمّل كامل (حجمه مطابق)، عشان «مشكلة في تحليل الحزمة» ما تحصلش أبدًا
+let running = null;
+export function downloadUpdate(v, expected = 0, onProgress) {
+  if (running) return running; // ضغطتين على الزرار = تحميل واحد بس
+  running = (async () => {
+    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    const { FileTransfer } = await import('@capacitor/file-transfer');
+    const name = `rihlat-siraj-${v}.apk`;
+    // نمسح أي ملف قديم أو ناقص من محاولة قبل كده
+    for (const f of (await Filesystem.readdir({ path: '', directory: Directory.Cache }).catch(() => ({ files: [] }))).files || []) {
+      const n = typeof f === 'string' ? f : f.name; if (/^rihlat-siraj.*\.apk$/.test(n)) await Filesystem.deleteFile({ path: n, directory: Directory.Cache }).catch(() => {});
+    }
+    const { uri } = await Filesystem.getUri({ path: name, directory: Directory.Cache });
+    let best = 0;
+    const h = await FileTransfer.addListener('progress', (p) => {
+      if (p.type !== 'download') return;
+      const total = expected || (p.lengthComputable ? p.contentLength : 0);
+      if (total < 1e6) return; // ردود التحويل الصغيرة قبل الملف الحقيقي
+      const f = Math.min(1, p.bytes / total);
+      if (f > best) { best = f; onProgress?.(f, p.bytes, total); } // التقدّم بيزيد بس، عمره ما يرجع لورا
+    });
+    try {
+      await FileTransfer.downloadFile({ url: apkUrl(v), path: uri, progress: true, connectTimeout: 20000, readTimeout: 60000 });
+    } finally { h.remove(); }
+    const st = await Filesystem.stat({ path: name, directory: Directory.Cache });
+    if (st.size < 3e6 || (expected && Math.abs(st.size - expected) > 0)) { await Filesystem.deleteFile({ path: name, directory: Directory.Cache }).catch(() => {}); throw new Error('incomplete'); }
+    onProgress?.(1, st.size, st.size);
+    return st.uri || uri;
+  })();
+  running.finally(() => { running = null; });
+  return running;
 }
 export async function installUpdate(path) {
   const { FileOpener } = await import('@capacitor-community/file-opener');
