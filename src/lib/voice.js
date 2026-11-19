@@ -57,16 +57,18 @@ const ayatOf = (codes, st) => {
   return codes.flatMap((c) => Array.from({ length: rep }, () => (st.teach ? { url: `${BASE}audio/${dir}/${c}.mp3`, gap: true } : `${BASE}audio/${dir}/${c}.mp3`)));
 };
 
-export function say(text, after = []) {
-  if (man === null) { const my0 = ++token; return ready.then(() => (token === my0 ? say(text, after) : undefined)); }
+// say(كلام قبل، آيات، كلام بعد): مثلًا «ربنا قال…» ← الشيخ يقرا ← «يعني…»
+export function say(text, after = [], post = '') {
+  if (man === null) { const my0 = ++token; return ready.then(() => (token === my0 ? say(text, after, post) : undefined)); }
   const st = useStore.getState().settings;
   hush(); const my = token;
   const p = new Promise((r) => { finish = r; });
-  speak(text, after, st, my);
+  speak(text, after, st, my, post);
   return p;
 }
-function speak(text, after, st, my) {
-  const ayat = st.quran === false ? [] : ayatOf(after, st);
+function speak(text, after, st, my, post) {
+  const ph = post && st.voice && man?.[lineHash(post)];
+  const ayat = [...(st.quran === false ? [] : ayatOf(after, st)), ...(ph ? [`${BASE}audio/voice/${ph}`] : [])];
   if (!st.voice || !text) { playList(ayat, my); return; }
   const h = lineHash(text);
   if (man?.[h]) { playList([`${BASE}audio/voice/${man[h]}`, ...ayat], my); return; }
@@ -79,3 +81,9 @@ function speak(text, after, st, my) {
   } catch (e) { playList(ayat, my); }
 }
 export const recite = (codes) => say('', codes);
+// جملة ترحيب للشاشة: once = مرة واحدة بس في الجلسة
+const heard = new Set();
+export function hubSay(line, once = false) {
+  if (!line || (once && heard.has(line))) return;
+  heard.add(line); setTimeout(() => say(line), 350);
+}

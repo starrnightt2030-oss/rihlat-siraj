@@ -14,7 +14,7 @@ export const giftLine = (g) => 'هدية النهارده: ' + g.t + '. ' + g.su
 
 export const stepLine = (s) => {
   if (s.k === 'say') return s.t;
-  if (s.k === 'ayah') return s.mean ? 'ربنا قال في القرآن كلام جميل، يعني: ' + s.mean : 'ربنا قال في القرآن كلام جميل.';
+  if (s.k === 'ayah') return 'ربنا قال في القرآن كلام جميل.';
   if (s.k === 'hadith') return 'النبي صلى الله عليه وسلم علّمنا نقول: ' + s.t + (s.mean ? '. يعني: ' + s.mean : '');
   if (s.k === 'tips') return 'أعمل إيه في حياتي؟ ' + s.items.join('. ');
   if (s.k === 'grid') return s.title + ': ' + s.items.map(([t, sub]) => t + '، ' + sub).join('. ');
@@ -23,6 +23,23 @@ export const stepLine = (s) => {
   if (s.k === 'pick' || s.k === 'match' || s.k === 'order' || s.k === 'fill') return s.q;
   if (s.k === 'surah') return 'يلا نسمع سورة ' + s.name + ' ونقرا ورا الشيخ.';
   return '';
+};
+// شرح الآية بيتقال بعد ما الشيخ يقراها
+export const stepPost = (s) => (s.k === 'ayah' && s.mean ? 'يعني: ' + s.mean : '');
+// جمل الشاشات الرئيسية (بتتقال أول ما الطفل يفتح الشاشة)
+export const HUB = {
+  home: { boy: 'أهلًا يا بطل! اختار هتتعلّم إيه النهارده.', girl: 'أهلًا يا بطلة! اختاري هتتعلّمي إيه النهارده.' },
+  games: 'اختار لعبة، ونلعب ونتعلّم سوا!',
+  album: 'دي كنوزك! كل ما تتعلّم أكتر، كنوزك بتزيد.',
+  island: 'يلا! الكارت اللي عليه الدور مستنيك',
+  stories: 'اختار حكاية وأنا أحكيهالك',
+  sec: {
+    salah: 'صلاتي ووضوئي. هنتعلّم الوضوء والصلاة خطوة بخطوة بالصور.',
+    quran: 'قرآني. سور قصيرة نسمعها من الشيخ ونقرا وراه.',
+    aqida: 'عقيدتي. نتعرّف على ربنا وعلى أركان الإيمان.',
+    islam: 'أركان الإسلام. خمس أعمدة بيتبني عليها ديننا.',
+    akhlaq: 'أخلاقي وآدابي. إزاي أكون طيب ومؤدب مع الناس.',
+  },
 };
 export const sceneLine = (sc) => sc.t;
 
@@ -39,7 +56,7 @@ export function allLines() {
   for (const u of UNITS) {
     L.add('برافو! نوّرت ' + u.title); L.add(u.sub);
     for (const c of u.cards) {
-      (c.steps || []).forEach((s) => L.add(stepLine(s)));
+      (c.steps || []).forEach((s) => { L.add(stepLine(s)); if (stepPost(s)) L.add(stepPost(s)); });
       (c.steps || []).forEach((s) => { if (s.ok) L.add(s.ok); });
       if (c.quiz) L.add(c.quiz.q);
     }
@@ -49,6 +66,7 @@ export function allLines() {
     s.scenes.forEach((sc) => { L.add(sceneLine(sc)); (sc.choose || []).forEach((ch) => L.add(ch.res)); });
     L.add(s.moral); s.quiz.forEach((q) => L.add(q.q));
   }
+  [HUB.home.boy, HUB.home.girl, HUB.games, HUB.album, HUB.island, HUB.stories, ...Object.values(HUB.sec)].forEach((t) => L.add(t));
   Object.values(STICKER_NAMES).forEach((n) => L.add(n));
   SPARKS.forEach((sp) => { L.add('شرارة ' + sp.name); L.add('شرارة ' + sp.name + ' مستنياك في الحكايات'); });
   GIFTS.forEach((g) => L.add(giftLine(g)));

@@ -11,11 +11,13 @@ import { cardById } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush } from '../lib/voice';
+import { say, hush , hubSay } from '../lib/voice';
+import { HUB } from '../data/speech';
 
 export default function Stories({ arg, go, back }) {
   if (arg && STORIES[arg]) return <Player id={arg} go={go} back={back} />;
   const done = useStore((s) => s.done);
+  useEffect(() => { hubSay(HUB.stories); return () => hush(); }, []);
   return (
     <div className="screen with-nav" style={{ gap: 14 }}>
       <Sky />

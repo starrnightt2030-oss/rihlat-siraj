@@ -12,6 +12,8 @@ import { ALL_CARDS, nextCard, unitById } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
+import { hubSay, hush } from '../lib/voice';
+import { HUB } from '../data/speech';
 
 // الأقسام: كل قسم بيفتح مجموعة وحدات، أو شاشة خاصة
 export const SECTIONS = [
@@ -34,7 +36,7 @@ export default function Home({ go }) {
   const h = new Date().getHours();
   const hi = h >= 4 && h < 12 ? 'صباح النور' : h < 17 ? 'نهارك سعيد' : 'مساء النور';
   const visit = useStore((st) => st.visit);
-  useEffect(() => { visit(today()); syncReminders(); }, []);
+  useEffect(() => { visit(today()); syncReminders(); hubSay(HUB.home[profile?.gender === 'girl' ? 'girl' : 'boy'], true); return () => hush(); }, []);
   const open = (s) => { sfx.pop(); if (s.go) go(...s.go); else go('sec', s.id); };
   return (
     <div className="screen with-nav" style={{ gap: 12 }}>
@@ -79,6 +81,7 @@ export default function Home({ go }) {
 export function Section({ arg, go, back }) {
   const s = SECTIONS.find((x) => x.id === arg) || SECTIONS[0];
   const done = useStore((st) => st.done);
+  useEffect(() => { hubSay(HUB.sec[s.id]); return () => hush(); }, [s.id]);
   return (
     <div className="screen" style={{ gap: 12 }}>
       <Sky />

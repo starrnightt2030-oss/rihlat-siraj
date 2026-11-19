@@ -9,7 +9,7 @@ import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say, hush, recite, onAyah } from '../lib/voice';
-import { stepLine } from '../data/speech';
+import { stepLine, stepPost } from '../data/speech';
 import Art from '../art';
 import Practice, { PRACTICE } from '../components/Practice';
 import { ReciterChip } from '../components/Reciter';
@@ -19,7 +19,7 @@ const tashkeel = (t) => (t.match(/[\u064B-\u0652]/g) || []).length >= 3;
 const TILE = ['#FFF3D6', '#E6F6EE', '#FFEAF2', '#E6F0FF', '#F1ECFF', '#E3F6FA'];
 const TILE_C = ['#F5A623', '#2FB383', '#E0609E', '#3A8FE0', '#7B5CE0', '#1F8FA6'];
 const audOf = (s) => s.k === 'ayah' && s.aud ? [].concat(s.aud) : s.k === 'surah' ? s.verses.map((_, k) => s.sura + String(k + 1).padStart(3, '0')) : [];
-const speak = (s) => say(stepLine(s), audOf(s));
+const speak = (s) => say(stepLine(s), audOf(s), stepPost(s));
 
 export default function Card({ arg, go, back }) {
   const c = cardById(arg) || ALL_CARDS[0];
