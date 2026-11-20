@@ -40,7 +40,8 @@ function Surah({ s, back }) {
   const [reps, setReps] = useState(3), [on, setOn] = useState(-1), [turn, setTurn] = useState(false), [hide, setHide] = useState(false), [party, setParty] = useState(false);
   // سمّعني: المايك بيسمع الطفل وهو بيعيد، والكلمات بتنوّر أول ما يقولها
   const [mic, setMic] = useState('unk'); // unk | ok | denied | none | fail
-  const micNow = async () => { if (mic !== 'unk') return mic; const m = await micReady(); setMic(m); return m; };
+  // الشيخ عمره ما يستنى المايك: لو إذن المايك ماجاش في ثانية ونص، نكمّل من غير سماع
+  const micNow = async () => { if (mic !== 'unk') return mic; const m = await Promise.race([micReady(), wait(1500).then(() => 'unk')]); if (m !== 'unk') setMic(m); return m; };
   const [heard, setHeard] = useState(''), [hits, setHits] = useState({}), [note, setNote] = useState(null), [seen, setSeen] = useState({}), [mode, setMode] = useState(null), [res, setRes] = useState(null);
   const run = useRef({ n: 0, cur: null, ear: null });
   const stop = () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} run.current.ear?.stop(); setOn(-1); setTurn(false); setMode(null); setHeard(''); setNote(null); };

@@ -1,5 +1,5 @@
 // ألعاب الكلمات: حروف مبعثرة (زي كلمات كراش)، سؤال المليون، دوّر على الكلمة، رتّب الآية
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import Siraj from '../components/Siraj';
@@ -166,29 +166,71 @@ export function WordSearch({ back, age }) {
   const n = age === '4-6' ? 6 : 7, cnt = age === '4-6' ? 4 : age === '7-9' ? 5 : 6;
   const [seed, setSeed] = useState(0), [th, setTh] = useState(0);
   const T = THEMES[th % THEMES.length];
-  const { g, place } = useMemo(() => makeGrid(shuffle(T.w).slice(0, cnt).sort((a, b) => b.length - a.length), n), [seed, th]);
-  const [found, setFound] = useState([]), [sel, setSel] = useState(null), [flash, setFlash] = useState(null);
-  useEffect(() => { setFound([]); setSel(null); say('دوّر على الكلمات المستخبية!'); }, [seed, th]);
+  const { g, place } = useMemo(() => makeGrid(shuffle(T.w).slice(0, cnt).sort((a, b) => b.length - a.length), n) || makeGrid(T.w.slice(0, 3), n), [seed, th]);
+  const [found, setFound] = useState([]), [path, setPath] = useState([]), [flash, setFlash] = useState(null), [bad, setBad] = useState(false);
+  const drag = useRef(null), grid = useRef(null);
+  useEffect(() => { setFound([]); setPath([]); say('دوّر على الكلمات المستخبية!'); }, [seed, th]);
   const key = (y, x) => y + ',' + x;
   const isFound = (y, x) => place.some((p) => found.includes(p.w) && p.cells.some(([a, b]) => a === y && b === x));
+  // الحروف المختارة لازم تبقى على خط واحد (صف أو عمود) من أول حرف لحد الحرف اللي واقف عليه
+  const line = (a, b) => {
+    if (a[0] !== b[0] && a[1] !== b[1]) return null;
+    const dy = Math.sign(b[0] - a[0]), dx = Math.sign(b[1] - a[1]), len = Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
+    return Array.from({ length: len + 1 }, (_, k) => [a[0] + dy * k, a[1] + dx * k]);
+  };
+  const word = (cells) => cells.map(([y, x]) => g[y][x]).join('');
+  const check = (cells) => {
+    const ks = cells.map(([y, x]) => key(y, x)).join('|');
+    const hit = place.find((p) => !found.includes(p.w) && (p.cells.map(([y, x]) => key(y, x)).join('|') === ks || [...p.cells].reverse().map(([y, x]) => key(y, x)).join('|') === ks));
+    if (hit) { sfx.star(); setFound((f) => [...f, hit.w]); setFlash(hit.w); setPath([]); say('شاطر! إجابة صح'); return true; }
+    return false;
+  };
+  // الدوس: كل حرف بتدوس عليه بيكمّل الكلمة، ولو دوست على حرف مش على نفس الخط بنبدأ من عنده
   const tap = (y, x) => {
     sfx.tap();
-    if (!sel) { setSel([y, x]); return; }
-    const [y0, x0] = sel; setSel(null);
-    const hit = place.find((p) => !found.includes(p.w) && ((key(...p.cells[0]) === key(y0, x0) && key(...p.cells.at(-1)) === key(y, x)) || (key(...p.cells.at(-1)) === key(y0, x0) && key(...p.cells[0]) === key(y, x))));
-    if (hit) { sfx.star(); setFound([...found, hit.w]); setFlash(hit.w); say('شاطر! إجابة صح'); }
-    else sfx.oops?.();
+    if (!path.length) { setPath([[y, x]]); return; }
+    const last = path.at(-1);
+    if (last[0] === y && last[1] === x) { setPath(path.slice(0, -1)); return; } // دوسة تانية على آخر حرف بتمسحه
+    const l = line(path[0], [y, x]);
+    if (!l) { setPath([[y, x]]); return; }
+    setPath(l);
+    if (!check(l)) {
+      const longest = Math.max(...place.filter((p) => !found.includes(p.w)).map((p) => p.cells.length));
+      if (l.length >= longest) { setBad(true); sfx.oops?.(); setTimeout(() => { setBad(false); setPath([]); }, 600); }
+    }
   };
+  // السحب بالصباع: من أول حرف لآخر حرف
+  const cellAt = (e) => { const el = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('[data-cell]'); return el ? el.dataset.cell.split(',').map(Number) : null; };
+  const down = (e) => { const c = cellAt(e); if (!c) return; drag.current = { start: c, moved: false }; };
+  const move = (e) => {
+    const d = drag.current; if (!d) return; const c = cellAt(e); if (!c) return;
+    if (c[0] === d.start[0] && c[1] === d.start[1]) return;
+    const l = line(d.start, c); if (!l) return;
+    if (!d.moved) { d.moved = true; try { grid.current.setPointerCapture(e.pointerId); } catch (er) {} }
+    setPath(l);
+  };
+  const up = (e) => {
+    const d = drag.current; drag.current = null; if (!d) return;
+    if (!d.moved) { const c = cellAt(e) || d.start; tap(c[0], c[1]); return; }
+    setPath((cur) => { if (!check(cur)) { setBad(true); sfx.oops?.(); setTimeout(() => { setBad(false); setPath([]); }, 500); } return cur; });
+  };
+  const inPath = (y, x) => path.some(([a, b]) => a === y && b === x);
   const allDone = found.length === place.length;
   return (
     <div className="screen" style={{ gap: 12 }}>
       <Sky tone="mint" />
       <Head t="دوّر على الكلمة" back={back} right={<Pill c={T.c}>{T.t}</Pill>} />
       {allDone ? <Done title="لقيت كل الكلمات! 🔎" again={() => { setTh(th + 1); setSeed(seed + 1); }} back={back} /> : (<>
-        <div style={{ position: 'relative', fontSize: 15, fontWeight: 800, color: '#5D6CA0', textAlign: 'center' }}>دوس على أول حرف في الكلمة، وبعدين على آخر حرف</div>
-        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${n}, 1fr)`, gap: 4, direction: 'rtl', background: '#fff', borderRadius: 20, padding: 8, boxShadow: '0 5px 0 #D5EBE0' }}>
-          {g.map((row, y) => row.map((ch, x) => { const f = isFound(y, x), s = sel && sel[0] === y && sel[1] === x;
-            return <motion.button key={key(y, x)} type="button" whileTap={{ scale: 0.85 }} onClick={() => tap(y, x)} style={{ aspectRatio: '1', border: 0, borderRadius: 10, fontFamily: 'inherit', fontSize: n > 6 ? 22 : 26, fontWeight: 800, cursor: 'pointer', background: s ? '#FFC93C' : f ? T.c : '#F4F6FB', color: f ? '#fff' : '#26336B' }}>{ch}</motion.button>; }))}
+        <div style={{ position: 'relative', fontSize: 15, fontWeight: 800, color: '#5D6CA0', textAlign: 'center' }}>دوس على حروف الكلمة ورا بعض، أو اسحب صباعك عليها</div>
+        <motion.div animate={bad ? { x: [0, -10, 10, -6, 6, 0] } : {}} style={{ position: 'relative', minHeight: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: bad ? '#FFE3E3' : '#fff', borderRadius: 18, padding: '6px 12px', boxShadow: '0 4px 0 #D5EBE0' }}>
+          <span style={{ fontSize: 28, fontWeight: 800, color: bad ? '#E5484D' : T.c, letterSpacing: 2 }}>{path.length ? word(path) : '…'}</span>
+          {path.length > 0 && <button type="button" aria-label="امسح" onClick={() => setPath([])} style={{ border: 0, background: '#F4F6FB', borderRadius: 12, padding: '4px 10px', fontSize: 16, cursor: 'pointer' }}>✖</button>}
+        </motion.div>
+        <div ref={grid} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { drag.current = null; }}
+          style={{ position: 'relative', display: 'grid', gridTemplateColumns: `repeat(${n}, 1fr)`, gap: 4, direction: 'rtl', background: '#fff', borderRadius: 20, padding: 8, boxShadow: '0 5px 0 #D5EBE0', touchAction: 'none', userSelect: 'none' }}>
+          {g.map((row, y) => row.map((ch, x) => { const f = isFound(y, x), s = inPath(y, x);
+            return <motion.div key={key(y, x)} data-cell={key(y, x)} role="button" aria-label={ch} animate={{ scale: s ? 1.08 : 1 }}
+              style={{ aspectRatio: '1', borderRadius: 10, display: 'grid', placeItems: 'center', fontSize: n > 6 ? 22 : 26, fontWeight: 800, cursor: 'pointer', background: s ? (bad ? '#FF8A8A' : '#FFC93C') : f ? T.c : '#F4F6FB', color: f && !s ? '#fff' : '#26336B', transition: 'background .15s' }}>{ch}</motion.div>; }))}
         </div>
         <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
           {place.map((p) => <motion.span key={p.w} animate={flash === p.w ? { scale: [1, 1.3, 1] } : {}} style={{ padding: '6px 14px', borderRadius: 16, fontSize: 18, fontWeight: 800, background: found.includes(p.w) ? T.c : '#fff', color: found.includes(p.w) ? '#fff' : '#26336B', textDecoration: found.includes(p.w) ? 'line-through' : 'none', boxShadow: '0 3px 0 #E8E0D0' }}>{p.w}</motion.span>)}
