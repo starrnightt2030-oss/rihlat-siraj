@@ -1,6 +1,7 @@
+// وضع التحفيظ (سمّعني): المايك بيسمع الطفل وهو بيعيد والكلمات بتنوّر أول ما يقولها، و«سمّعني» بيخبّي الآيات ويظهر كل كلمة يقولها صح
 // وضع التحفيظ: يختار الطفل سورة من جزء عمّ (والفاتحة)، الشيخ يقرا كل آية والطفل يعيد وراه بعدد مرات يختاره،
 // وبعدين «اختبر نفسك»: الآيات تستخبى والطفل يسمّع، و«حفظتها» بتتسجل لولي الأمر
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import { Confetti } from '../components/Reward';
@@ -10,6 +11,9 @@ import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say, hush, hubSay } from '../lib/voice';
+import { HomeBtn } from '../components/ui';
+import { micReady, hear } from '../lib/listen';
+import { ayahWords, align, score } from '../lib/match';
 
 const BASE = import.meta.env.BASE_URL;
 const SURAS = Object.keys(Q30).map(Number).sort((a, b) => (a === 1 ? -1 : b === 1 ? 1 : b - a)); // الفاتحة ثم الناس ← النبأ
@@ -32,26 +36,79 @@ function playOnce(url, run, my) {
 function Surah({ s, back }) {
   const st = useStore((x) => x.settings), done = useStore((x) => x.hifz) || [], mark = useStore((x) => x.hifzToggle);
   const ayat = Q30[s].ayat;
+  const words = useMemo(() => ayat.map(ayahWords), [s]);
   const [reps, setReps] = useState(3), [on, setOn] = useState(-1), [turn, setTurn] = useState(false), [hide, setHide] = useState(false), [party, setParty] = useState(false);
-  const run = useRef({ n: 0, cur: null });
-  const stop = () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} setOn(-1); setTurn(false); };
-  useEffect(() => () => { stop(); hush(); }, []);
+  // سمّعني: المايك بيسمع الطفل وهو بيعيد، والكلمات بتنوّر أول ما يقولها
+  const [mic, setMic] = useState('unk'); // unk | ok | denied | none
+  const [heard, setHeard] = useState(''), [hits, setHits] = useState({}), [note, setNote] = useState(null), [seen, setSeen] = useState({}), [mode, setMode] = useState(null), [res, setRes] = useState(null);
+  const run = useRef({ n: 0, cur: null, ear: null });
+  const stop = () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} run.current.ear?.stop(); setOn(-1); setTurn(false); setMode(null); setHeard(''); setNote(null); };
+  useEffect(() => { micReady().then(setMic); return () => { stop(); hush(); }; }, []);
   const r = reciterById(st.reciter);
   const code = (k) => String(s).padStart(3, '0') + String(k + 1).padStart(3, '0');
+  const alive = (my) => run.current.n === my;
+  // يسمع الطفل وهو بيقرا آية k، ولو سكت في النص يدّيله فرصة تانية يكمّل. بيرجع نسبة الكلمات اللي قالها صح
+  const listen = async (k, my, est) => {
+    let all = ''; let best = words[k].map(() => false);
+    setHeard(''); setHits((h) => ({ ...h, [k]: best }));
+    for (let round = 0; round < 3 && alive(my); round++) {
+      const ear = hear({ maxMs: Math.max(6000, est * 2.2 + 3000), waitMs: round ? 4000 : 7000,
+        onText: (t) => { const txt = (all + ' ' + t).trim(); setHeard(txt); const h = align(words[k], txt); setHits((x) => ({ ...x, [k]: h })); if (score(h) >= 0.85) ear.stop(); } });
+      run.current.ear = ear;
+      const t = await ear.promise; run.current.ear = null;
+      if (!t) break;
+      all = (all + ' ' + t).trim(); best = align(words[k], all);
+      if (score(best) >= 0.85) break;
+    }
+    setHits((x) => ({ ...x, [k]: best }));
+    return { sc: score(best), said: !!all };
+  };
+  // الشيخ يقرا والطفل يعيد وراه
   const start = async (from = 0) => {
-    stop(); hush(); const my = ++run.current.n;
+    stop(); hush(); const my = ++run.current.n; setMode('rep'); setRes(null);
     for (let k = from; k < ayat.length; k++) {
       for (let t = 0; t < reps; t++) {
-        if (run.current.n !== my) return;
-        setOn(k); setTurn(false);
+        if (!alive(my)) return;
+        setOn(k); setTurn(false); setNote(null); setHeard(''); setHits((h) => ({ ...h, [k]: null }));
         const d = await playOnce(ayahUrl(r, code(k), BASE), run.current, my);
-        if (run.current.n !== my) return;
-        setTurn(true); await wait(Math.max(2500, d * 1100)); // وقت الطفل يعيد
+        if (!alive(my)) return;
+        setTurn(true);
+        if (mic === 'ok') {
+          const { sc, said } = await listen(k, my, d * 1000);
+          if (!alive(my)) return;
+          setTurn(false);
+          if (sc >= 0.6) { sfx.good(); setNote({ ok: true, t: sc >= 0.9 ? 'ما شاء الله! 🌟' : 'برافو! 👏' }); }
+          else { sfx.soft(); setNote({ ok: false, t: said ? 'قربت! اسمع الشيخ تاني 👂' : 'مسمعتكش… قول ورا الشيخ بصوت عالي 🎤' }); }
+          await wait(1100);
+        } else await wait(Math.max(2500, d * 1100)); // من غير مايك: وقت للطفل يعيد
       }
     }
-    if (run.current.n === my) { setOn(-1); setTurn(false); }
+    if (alive(my)) { setOn(-1); setTurn(false); setNote(null); setMode(null); }
+  };
+  // سمّعني من حفظك: الآيات مستخبية، والطفل يقرا لوحده، وكل كلمة يقولها صح بتظهر. لو غلط الشيخ يصحّحله
+  const test = async () => {
+    stop(); hush(); const my = ++run.current.n; setMode('test'); setHide(true); setSeen({}); setHits({}); setRes(null);
+    await say('اختبر نفسك! قول الآيات من حفظك.');
+    let good = 0;
+    for (let k = 0; k < ayat.length; k++) {
+      if (!alive(my)) return;
+      setOn(k); setTurn(true); setNote(null);
+      const { sc } = await listen(k, my, words[k].length * 900);
+      if (!alive(my)) return;
+      setTurn(false); setSeen((x) => ({ ...x, [k]: true }));
+      if (sc >= 0.6) { good++; sfx.good(); setNote({ ok: true, t: 'صح! 👏' }); await wait(700); }
+      else { sfx.soft(); setNote({ ok: false, t: 'اسمع الشيخ وكمّل 👂' }); await playOnce(ayahUrl(r, code(k), BASE), run.current, my); }
+    }
+    if (!alive(my)) return;
+    setOn(-1); setMode(null); setNote(null); setRes({ good, all: ayat.length });
+    if (good === ayat.length) { if (!done.includes(s)) mark(s); setParty(true); sfx.star(); say(HIFZ_DONE); }
   };
   const ok = done.includes(s);
+  const word = (k, w, j) => {
+    const h = hits[k]?.[j], show = !hide || seen[k] || h;
+    return <span key={j} style={{ color: h ? '#1F8A61' : '#26336B', background: h ? '#D4F5E4' : 'transparent', borderRadius: 8, filter: show ? 'none' : 'blur(7px)', transition: 'all .25s' }}>{w} </span>;
+  };
+  const btn = (bg, fg, extra) => ({ borderRadius: 16, padding: 12, border: 0, background: bg, color: fg, fontFamily: 'inherit', fontSize: 16, fontWeight: 800, cursor: 'pointer', ...extra });
   return (
     <div className="screen" style={{ gap: 12 }}>
       <Sky tone="mint" />
@@ -59,6 +116,7 @@ function Surah({ s, back }) {
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
         <Back onClick={back} />
         <div style={{ flex: 1 }}><h1 style={{ fontSize: 24, fontWeight: 800, color: '#1F8A61' }}>سورة {Q30[s].name}</h1><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896' }}>{ar(ayat.length)} آيات • بصوت {r.name}</div></div>
+        <HomeBtn />
       </div>
       <div className="card" style={{ position: 'relative', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', fontWeight: 800 }}>
@@ -66,17 +124,28 @@ function Surah({ s, back }) {
           {[1, 3, 5].map((n) => <button key={n} type="button" onClick={() => setReps(n)} style={{ borderRadius: 12, padding: '6px 14px', border: 0, background: reps === n ? '#2FB383' : '#E3F7EE', color: reps === n ? '#fff' : '#1F8A61', fontFamily: 'inherit', fontWeight: 800, cursor: 'pointer' }}>{n === 1 ? 'مرة' : `${ar(n)} مرات`}</button>)}
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {on < 0 ? <button type="button" onClick={() => start(0)} style={{ flex: 2, borderRadius: 16, padding: 12, border: 0, background: '#2FB383', color: '#fff', fontFamily: 'inherit', fontSize: 17, fontWeight: 800, cursor: 'pointer' }}>▶ ابدأ التحفيظ</button>
-            : <button type="button" onClick={stop} style={{ flex: 2, borderRadius: 16, padding: 12, border: 0, background: '#E5484D', color: '#fff', fontFamily: 'inherit', fontSize: 17, fontWeight: 800, cursor: 'pointer' }}>■ وقّف</button>}
-          <button type="button" onClick={() => { setHide(!hide); if (!hide) say('اختبر نفسك! قول الآيات من حفظك.'); }} style={{ flex: 1, borderRadius: 16, padding: 10, border: '3px solid #2FB383', background: hide ? '#E3F7EE' : '#fff', color: '#1F8A61', fontFamily: 'inherit', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>{hide ? '👁 اظهر الآيات' : '🙈 اختبر نفسك'}</button>
+          {mode ? <button type="button" onClick={stop} style={btn('#E5484D', '#fff', { flex: 1 })}>■ وقّف</button>
+            : <>
+              <button type="button" onClick={() => { setHide(false); start(0); }} style={btn('#2FB383', '#fff', { flex: 3 })}>▶ ردّد ورا الشيخ</button>
+              <button type="button" onClick={mic === 'ok' ? test : () => { setHide(!hide); if (!hide) say('اختبر نفسك! قول الآيات من حفظك.'); }} style={btn('#fff', '#1F8A61', { flex: 2, border: '3px solid #2FB383', fontSize: 14, padding: 10 })}>{mic === 'ok' ? '🎤 سمّعني' : hide ? '👁 اظهر الآيات' : '🙈 اختبر نفسك'}</button>
+            </>}
         </div>
+        {mic === 'denied' && <div style={{ fontSize: 12, fontWeight: 700, color: '#B07A12' }}>🎤 عشان الشيخ يسمعك وانت بتقرا، اسمح للتطبيق يستخدم المايك من إعدادات الموبايل.</div>}
       </div>
-      {turn && <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card" style={{ position: 'relative', padding: 10, textAlign: 'center', fontSize: 18, fontWeight: 800, background: '#FFF3D6', color: '#B07A12' }}>🎤 دورك! قول الآية ورا الشيخ</motion.div>}
+      {(turn || note) && <motion.div key={(turn ? 't' : 'n') + on} initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card"
+        style={{ position: 'relative', padding: 10, textAlign: 'center', background: note ? (note.ok ? '#D4F5E4' : '#FFE9D6') : '#FFF3D6', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ fontSize: 18, fontWeight: 800, color: note ? (note.ok ? '#1F8A61' : '#B4531A') : '#B07A12' }}>
+          {note ? note.t : mic === 'ok' ? <><motion.span animate={{ scale: [1, 1.25, 1] }} transition={{ repeat: Infinity, duration: 1 }} style={{ display: 'inline-block' }}>🎤</motion.span> {mode === 'test' ? 'اقرا الآية من حفظك… أنا سامعك' : 'دورك! اقرا الآية… أنا سامعك'}</> : '🎤 دورك! قول الآية ورا الشيخ'}
+        </div>
+        {heard && <div dir="rtl" style={{ fontSize: 16, fontWeight: 700, color: '#26336B', background: '#fff', borderRadius: 12, padding: '6px 10px' }}>«{heard}»</div>}
+      </motion.div>}
+      {res && <div className="card" style={{ position: 'relative', padding: 10, textAlign: 'center', fontSize: 17, fontWeight: 800, color: res.good === res.all ? '#1F8A61' : '#B4531A', background: res.good === res.all ? '#D4F5E4' : '#FFF3D6' }}>
+        {res.good === res.all ? `ما شاء الله! سمّعت السورة كلها صح 🌟` : `قريت ${ar(res.good)} من ${ar(res.all)} آيات صح… كمّل وانت هتحفظها 💪`}</div>}
       <div className="card" style={{ position: 'relative', padding: 12, display: 'flex', flexDirection: 'column', gap: 6, background: '#FFFDF5' }}>
         {ayat.map((t, k) => (
-          <motion.button key={k} type="button" onClick={() => start(k)} animate={{ background: on === k ? '#E3F7EE' : 'rgba(0,0,0,0)' }}
+          <motion.button key={k} type="button" onClick={() => { setHide(false); start(k); }} animate={{ background: on === k ? '#E3F7EE' : 'rgba(0,0,0,0)' }}
             style={{ border: 0, borderRadius: 12, padding: '4px 8px', cursor: 'pointer', textAlign: 'right', fontFamily: 'inherit' }}>
-            <span className="hafs" dir="rtl" style={{ fontSize: 24, color: '#26336B', filter: hide && on !== k ? 'blur(7px)' : 'none', transition: 'filter .3s' }}>{t} <span style={{ color: '#2FB383', fontSize: 18 }}>﴿{ar(k + 1)}﴾</span></span>
+            <span className="hafs" dir="rtl" style={{ fontSize: 24 }}>{words[k].map((w, j) => word(k, w, j))}<span style={{ color: '#2FB383', fontSize: 18 }}>﴿{ar(k + 1)}﴾</span></span>
           </motion.button>
         ))}
       </div>
@@ -85,10 +154,10 @@ function Surah({ s, back }) {
   );
 }
 
-export default function Hifz({ arg, back, go }) {
+export default function Hifz({ arg, back, go, swap }) {
   const done = useStore((x) => x.hifz) || [];
-  useEffect(() => { if (!arg) hubSay(HIFZ_INTRO, true); return () => hush(); }, [arg]);
-  if (arg && Q30[arg]) return <Surah key={arg} s={+arg} back={() => go('hifz')} />;
+  useEffect(() => { if (!arg) hubSay(HIFZ_INTRO); return () => hush(); }, [arg]);
+  if (arg && Q30[arg]) return <Surah key={arg} s={+arg} back={back} />;
   return (
     <div className="screen" style={{ gap: 12 }}>
       <Sky tone="mint" />

@@ -8,6 +8,7 @@ import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say, hush, hubSay } from '../lib/voice';
+import { HomeBtn } from '../components/ui';
 
 const Back = ({ onClick }) => (
   <button type="button" className="icon-btn" aria-label="رجوع" onClick={onClick}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22306A" strokeWidth="3" strokeLinecap="round"><path d="M9 5l7 7-7 7" /></svg></button>
@@ -20,8 +21,13 @@ function Lesson({ l, back, next }) {
   const [mode, setMode] = useState('learn'); // learn | quiz | done
   const [q, setQ] = useState(null), [qi, setQi] = useState(0), [bad, setBad] = useState(-1);
   const playing = useRef(0);
-  useEffect(() => { hubSay(l.intro); return () => { playing.current++; hush(); }; }, [l.id]);
-  const tap = (k) => { sfx.tap(); setOn(k); say(l.tiles[k].s); };
+  // أول ما الدرس يفتح: سراج يشرح، وبعدين يقول كل البلاطات ورا بعضها من غير ما الطفل يدوس
+  useEffect(() => {
+    const my = ++playing.current;
+    const t = setTimeout(async () => { await say(l.intro); if (playing.current === my) { await new Promise((r) => setTimeout(r, 400)); if (playing.current === my) playAll(); } }, 400);
+    return () => { clearTimeout(t); playing.current++; hush(); };
+  }, [l.id]);
+  const tap = (k) => { playing.current++; sfx.tap(); setOn(k); say(l.tiles[k].s); };
   const playAll = async () => {
     const my = ++playing.current;
     for (let k = 0; k < l.tiles.length; k++) { if (playing.current !== my) return; setOn(k); await say(l.tiles[k].s); await new Promise((r) => setTimeout(r, 250)); }
@@ -50,6 +56,7 @@ function Lesson({ l, back, next }) {
           <h1 style={{ fontSize: 24, fontWeight: 800, color: l.c }}>{l.e} {l.t}</h1>
           <div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896' }}>{l.d}</div>
         </div>
+        <HomeBtn />
       </div>
       <button type="button" onClick={() => say(l.intro)} className="card" style={{ position: 'relative', border: 0, textAlign: 'right', padding: 12, fontFamily: 'inherit', fontSize: 15, fontWeight: 700, lineHeight: 1.8, color: '#26336B', background: l.bg, cursor: 'pointer' }}>🔊 {l.intro}</button>
       {mode === 'learn' && (<>
@@ -94,11 +101,11 @@ function Lesson({ l, back, next }) {
   );
 }
 
-export default function Qaida({ arg, back, go }) {
+export default function Qaida({ arg, back, go, swap }) {
   const done = useStore((s) => s.qaida) || [];
   const idx = QAIDA.findIndex((l) => l.id === arg);
-  useEffect(() => { if (idx < 0) hubSay(QAIDA_INTRO, true); return () => hush(); }, [idx]);
-  if (idx >= 0) return <Lesson key={arg} l={QAIDA[idx]} back={() => go('qaida')} next={QAIDA[idx + 1] ? () => go('qaida', QAIDA[idx + 1].id) : null} />;
+  useEffect(() => { if (idx < 0) hubSay(QAIDA_INTRO); return () => hush(); }, [idx]);
+  if (idx >= 0) return <Lesson key={arg} l={QAIDA[idx]} back={back} next={QAIDA[idx + 1] ? () => swap('qaida', QAIDA[idx + 1].id) : null} />;
   return (
     <div className="screen" style={{ gap: 12 }}>
       <Sky tone="mint" />

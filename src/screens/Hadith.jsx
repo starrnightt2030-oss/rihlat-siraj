@@ -10,6 +10,7 @@ import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say, hush, hubSay } from '../lib/voice';
+import { swap } from '../lib/nav';
 
 export const HADITH_INTRO = 'دي أحاديث النبي صلى الله عليه وسلم. اختار حديث وأنا أقولهولك وأشرحهولك.';
 
@@ -102,7 +103,7 @@ function Detail({ h, back, go }) {
       </div>
       <div style={{ position: 'relative', display: 'flex', gap: 10 }}>
         <Btn className="block" tone={ok ? 'leaf' : ''} sound="pop" onClick={() => { if (!ok) { sfx.reveal?.(); say('برافو! حفظته صح'); } toggle(h.id); }}>{ok ? '✓ حفظته' : 'حفظته!'}</Btn>
-        <Btn tone="teal" sound="whoosh" onClick={() => go('hadith', nx.id)} style={{ flexShrink: 0 }}>اللي بعده ◀</Btn>
+        <Btn tone="teal" sound="whoosh" onClick={() => swap('hadith', nx.id)} style={{ flexShrink: 0 }}>اللي بعده ◀</Btn>
       </div>
     </div>
   );
