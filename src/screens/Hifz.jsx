@@ -50,7 +50,7 @@ function Surah({ s, back }) {
   const [mt, setMt] = useState(null);
   const micTest = async () => {
     stop(); hush(); setMt({ on: true, t: '', log: [] });
-    const m = await Promise.race([micReady(), wait(4000).then(() => 'لسه مستني الإذن')]);
+    const m = await Promise.race([micReady(), wait(60000).then(() => 'لسه مستني الإذن')]);
     setMic(m === 'ok' || m === 'denied' || m === 'none' ? m : mic);
     if (m !== 'ok') { setMt({ on: false, t: '', log: [...micLog, 'النتيجة: ' + m] }); return; }
     const ear = hear({ waitMs: 8000, maxMs: 14000, onText: (t) => setMt((x) => ({ ...x, t })) });
