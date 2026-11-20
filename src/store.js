@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true, quran: true, reciter: 'alafasy', teach: false, reps: 1, remind: true }, lastSeen: 0, days: [], gift: '', azkar: { d: '', ids: [], secs: [] }, tasbih: 0, zdays: [], seenBadges: [], seenProphets: [], hdone: [], asmaSeen: [], rdays: {}, qaida: [], tuhfa: [], hifz: [], hifzWeak: {}, hifzCerts: {} };
+const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true, quran: true, reciter: 'alafasy', teach: false, reps: 1, remind: true }, lastSeen: 0, days: [], gift: '', azkar: { d: '', ids: [], secs: [] }, tasbih: 0, zdays: [], seenBadges: [], seenProphets: [], hdone: [], asmaSeen: [], rdays: {}, qaida: [], tuhfa: [], hifz: [], hifzWeak: {}, hifzCerts: {}, exam: {}, hifzTests: [] };
 
 export const useStore = create(persist((set, get) => ({
   ...blank,
@@ -38,6 +38,10 @@ export const useStore = create(persist((set, get) => ({
   markAyah: (n, k, bad) => set((s) => { const all = s.hifzWeak || {}, l = all[n] || []; const has = l.includes(k); if (bad === has) return {}; return { hifzWeak: { ...all, [n]: bad ? [...l, k] : l.filter((x) => x !== k) } }; }),
   // شهادات الحفظ: لكل سورة تاريخ أول مرة سمّعها كاملة
   certify: (n, info) => set((s) => ({ hifzCerts: { ...(s.hifzCerts || {}), [n]: { ...(s.hifzCerts || {})[n], ...info } } })),
+  // «اختبرني»: أحسن نسبة في كل قسم وكل مستوى { quran: { 1: 80, 2: 60 } }
+  examScore: (cat, lv, pct) => set((s) => { const e = s.exam || {}, c = e[cat] || {}; return { exam: { ...e, [cat]: { ...c, [lv]: Math.max(c[lv] || 0, pct) } } }; }),
+  // الاختبار الشامل للحفظ: آخر النتايج (لتقرير ولي الأمر)
+  addHifzTest: (t) => set((s) => ({ hifzTests: [...(s.hifzTests || []), t].slice(-20) })),
   tuhfaToggle: (id) => set((s) => { const l = s.tuhfa || []; return { tuhfa: l.includes(id) ? l.filter((x) => x !== id) : [...l, id] }; }),
   qaidaDone: (id) => set((s) => { const l = s.qaida || []; return l.includes(id) ? {} : { qaida: [...l, id] }; }),
   seeAsma: (k) => set((s) => { const l = s.asmaSeen || []; return l.includes(k) ? {} : { asmaSeen: [...l, k] }; }),
