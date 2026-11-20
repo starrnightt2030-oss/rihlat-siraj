@@ -12,6 +12,7 @@ import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say, hush, hubSay } from '../lib/voice';
 import { HomeBtn } from '../components/ui';
+import Certificate from '../components/Certificate';
 import { micReady, hear, micLog, resetMicMode } from '../lib/listen';
 import { ayahWords, align, score } from '../lib/match';
 
@@ -23,11 +24,16 @@ export const HIFZ_DONE = 'ما شاء الله! حفظت السورة.';
 const Back = ({ onClick }) => (
   <button type="button" className="icon-btn" aria-label="رجوع" onClick={onClick}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22306A" strokeWidth="3" strokeLinecap="round"><path d="M9 5l7 7-7 7" /></svg></button>
 );
+// الآية بتتحسب صح لو الطفل قال ٨٠٪ من كلماتها على الأقل (التعرّف على صوت الأطفال مش مظبوط ١٠٠٪)
+const PASS = 0.8;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-function playOnce(url, run, my) {
+// onNear: بتتنادي قبل ما الشيخ يخلّص الآية بحوالي ٠٫٨ ثانية، عشان المايك يبدأ يفتح بدري ويلحق أول كلمة من الطفل
+function playOnce(url, run, my, onNear) {
   return new Promise((res) => {
-    const a = new Audio(url); run.cur = a;
-    a.onended = () => res(a.duration || 4); a.onerror = () => res(0);
+    const a = new Audio(url); run.cur = a; let near = false;
+    const fire = () => { if (!near) { near = true; onNear?.(); } };
+    if (onNear) a.ontimeupdate = () => { if (a.duration && a.duration - a.currentTime < 0.8) fire(); };
+    a.onended = () => { fire(); res(a.duration || 4); }; a.onerror = () => { fire(); res(0); };
     if (run.n !== my) return res(0);
     a.play().catch(() => res(0));
   });
@@ -35,9 +41,11 @@ function playOnce(url, run, my) {
 
 function Surah({ s, back }) {
   const st = useStore((x) => x.settings), done = useStore((x) => x.hifz) || [], mark = useStore((x) => x.hifzToggle);
+  const profile = useStore((x) => x.profile), weak = useStore((x) => x.hifzWeak?.[s]) || [], markAyah = useStore((x) => x.markAyah), certs = useStore((x) => x.hifzCerts) || {}, certify = useStore((x) => x.certify);
+  const [cert, setCert] = useState(null);
   const ayat = Q30[s].ayat;
   const words = useMemo(() => ayat.map(ayahWords), [s]);
-  const [reps, setReps] = useState(3), [on, setOn] = useState(-1), [turn, setTurn] = useState(false), [hide, setHide] = useState(false), [party, setParty] = useState(false);
+  const [reps, setReps] = useState(1), [on, setOn] = useState(-1), [turn, setTurn] = useState(false), [hide, setHide] = useState(false), [party, setParty] = useState(false);
   // سمّعني: المايك بيسمع الطفل وهو بيعيد، والكلمات بتنوّر أول ما يقولها
   const [mic, setMic] = useState('unk'); // unk | ok | denied | none | fail
   // الشيخ عمره ما يستنى المايك: لو إذن المايك ماجاش في ثانية ونص، نكمّل من غير سماع
@@ -61,40 +69,56 @@ function Surah({ s, back }) {
   const code = (k) => String(s).padStart(3, '0') + String(k + 1).padStart(3, '0');
   const alive = (my) => run.current.n === my;
   // يسمع الطفل وهو بيقرا آية k، ولو سكت في النص يدّيله فرصة تانية يكمّل. بيرجع نسبة الكلمات اللي قالها صح
-  const listen = async (k, my, est) => {
-    let all = ''; let best = words[k].map(() => false);
+  const mkEar = (k, ctx, round, est, muted) => {
+    const ear = hear({ muted, maxMs: Math.max(6000, est * 2.2 + 3000), waitMs: round ? 4000 : 8000, onFail: () => { run.current.micFail = true; setMic('fail'); },
+      onText: (t) => { const txt = (ctx.all + ' ' + t).trim(); setHeard(txt); const h = align(words[k], txt); setHits((x) => ({ ...x, [k]: h })); if (score(h) >= 0.85) ear.stop(); } });
+    return ear;
+  };
+  // يفتح المايك بدري وهو «مكتوم» والشيخ لسه بيخلّص الآية
+  const prepare = (k, est) => { const ctx = { all: '' }; return { ctx, ear: mkEar(k, ctx, 0, est, true) }; };
+  const listen = async (k, my, est, early) => {
+    const ctx = early?.ctx || { all: '' }; let best = words[k].map(() => false);
     setHeard(''); setHits((h) => ({ ...h, [k]: best }));
     for (let round = 0; round < 3 && alive(my); round++) {
-      const ear = hear({ maxMs: Math.max(6000, est * 2.2 + 3000), waitMs: round ? 4000 : 8000, onFail: () => { run.current.micFail = true; setMic('fail'); },
-        onText: (t) => { const txt = (all + ' ' + t).trim(); setHeard(txt); const h = align(words[k], txt); setHits((x) => ({ ...x, [k]: h })); if (score(h) >= 0.85) ear.stop(); } });
+      const ear = round === 0 && early ? early.ear : mkEar(k, ctx, round, est, false);
+      if (round === 0 && early) ear.unmute();
       run.current.ear = ear;
       const t = await ear.promise; run.current.ear = null;
       if (!t) break;
-      all = (all + ' ' + t).trim(); best = align(words[k], all);
+      ctx.all = (ctx.all + ' ' + t).trim(); best = align(words[k], ctx.all);
       if (score(best) >= 0.85) break;
     }
     setHits((x) => ({ ...x, [k]: best }));
-    return { sc: score(best), said: !!all };
+    return { sc: score(best), said: !!ctx.all, best };
   };
+  // الكلمات اللي الطفل نسيها أو قالها غلط (أول ٣)
+  const missing = (k, best) => words[k].filter((w, j) => !best[j] && /[\u0621-\u064A]/.test(w)).slice(0, 3).join(' ');
   // الشيخ يقرا والطفل يعيد وراه
   const start = async (from = 0) => {
     stop(); hush(); const my = ++run.current.n; setMode('rep'); setRes(null);
     const m = await micNow(); if (!alive(my)) return;
     for (let k = from; k < ayat.length; k++) {
       for (let t = 0; t < reps; t++) {
-        if (!alive(my)) return;
-        setOn(k); setTurn(false); setNote(null); setHeard(''); setHits((h) => ({ ...h, [k]: null }));
-        const d = await playOnce(ayahUrl(r, code(k), BASE), run.current, my);
-        if (!alive(my)) return;
-        setTurn(true);
-        if (m === 'ok' && !run.current.micFail) {
-          const { sc, said } = await listen(k, my, d * 1000);
+        // لو الطفل قالها غلط أو ناقصة، الشيخ يعيدها ويسمعه تاني (لحد ٣ محاولات عشان مايزهقش)
+        for (let tries = 1; ; tries++) {
+          if (!alive(my)) return;
+          setOn(k); setTurn(false); setHeard(''); setHits((h) => ({ ...h, [k]: null }));
+          const useMic = m === 'ok' && !run.current.micFail;
+          let early = null;
+          const d = await playOnce(ayahUrl(r, code(k), BASE), run.current, my, useMic ? () => { if (alive(my)) early = prepare(k, (words[k].length * 700)); } : null);
+          if (!alive(my)) { early?.ear.stop(); return; }
+          setNote(null); setTurn(true);
+          if (!useMic) { early?.ear.stop(); await wait(Math.max(2500, d * 1100)); break; } // من غير مايك: وقت للطفل يعيد
+          const { sc, said, best } = await listen(k, my, d * 1000, early);
           if (!alive(my)) return;
           setTurn(false);
-          if (sc >= 0.6) { sfx.good(); setNote({ ok: true, t: sc >= 0.9 ? 'ما شاء الله! 🌟' : 'برافو! 👏' }); }
-          else { sfx.soft(); setNote({ ok: false, t: said ? 'قربت! اسمع الشيخ تاني 👂' : 'مسمعتكش… قول ورا الشيخ بصوت عالي 🎤' }); }
-          await wait(1100);
-        } else await wait(Math.max(2500, d * 1100)); // من غير مايك: وقت للطفل يعيد
+          if (sc >= PASS) { markAyah(s, k, false); sfx.good(); setNote({ ok: true, t: sc >= 0.95 ? 'ما شاء الله! 🌟' : 'برافو! 👏' }); await wait(1000); break; }
+          sfx.soft();
+          if (tries >= 3) { markAyah(s, k, true); setNote({ ok: false, t: 'مش مشكلة، هنرجعلها تاني 💪' }); await wait(1500); break; }
+          const miss = said && missing(k, best);
+          setNote({ ok: false, t: !said ? 'مسمعتكش… الشيخ هيقولها تاني وقول وراه بصوت عالي 🎤' : miss ? `قربت! ركّز في: «${miss}» 👂` : 'قربت! اسمع الشيخ تاني 👂' });
+          await wait(1600);
+        }
       }
     }
     if (alive(my)) { setOn(-1); setTurn(false); setNote(null); setMode(null); }
@@ -107,15 +131,27 @@ function Surah({ s, back }) {
     for (let k = 0; k < ayat.length; k++) {
       if (!alive(my)) return;
       setOn(k); setTurn(true); setNote(null);
-      const { sc } = await listen(k, my, words[k].length * 900);
-      if (!alive(my)) return;
+      // محاولتين: لو غلط في الأولى يعيدها من الأول، ولو غلط تاني الشيخ يصحّحله والآية تتسجل للمراجعة
+      let sc = 0, best = null;
+      for (let tries = 1; tries <= 2; tries++) {
+        setTurn(true);
+        ({ sc, best } = await listen(k, my, words[k].length * 900));
+        if (!alive(my)) return;
+        if (sc >= PASS || tries === 2) break;
+        setTurn(false); sfx.soft(); const miss = missing(k, best);
+        setNote({ ok: false, t: miss ? `راجع: «${miss}»… اقرا الآية تاني من الأول 🎤` : 'حاول تاني… اقرا الآية من الأول 🎤' }); await wait(1500); setNote(null);
+      }
       setTurn(false); setSeen((x) => ({ ...x, [k]: true }));
-      if (sc >= 0.6) { good++; sfx.good(); setNote({ ok: true, t: 'صح! 👏' }); await wait(700); }
-      else { sfx.soft(); setNote({ ok: false, t: 'اسمع الشيخ وكمّل 👂' }); await playOnce(ayahUrl(r, code(k), BASE), run.current, my); }
+      if (sc >= PASS) { good++; markAyah(s, k, false); sfx.good(); setNote({ ok: true, t: 'صح! 👏' }); await wait(700); }
+      else { markAyah(s, k, true); sfx.soft(); setNote({ ok: false, t: 'اسمع الشيخ وهو بيقولها صح 👂' }); await playOnce(ayahUrl(r, code(k), BASE), run.current, my); }
     }
     if (!alive(my)) return;
     setOn(-1); setMode(null); setNote(null); setRes({ good, all: ayat.length });
-    if (good === ayat.length) { if (!done.includes(s)) mark(s); setParty(true); sfx.star(); say(HIFZ_DONE); }
+    if (good === ayat.length) {
+      if (!done.includes(s)) mark(s); setParty(true); sfx.star(); say(HIFZ_DONE);
+      certify(s, { at: certs[s]?.at || Date.now(), last: Date.now() });
+      setTimeout(() => setCert(true), 1800);
+    }
   };
   const ok = done.includes(s);
   const word = (k, w, j) => {
@@ -127,6 +163,7 @@ function Surah({ s, back }) {
     <div className="screen" style={{ gap: 12 }}>
       <Sky tone="mint" />
       {party && <Confetti />}
+      {cert && <Certificate c={{ title: 'شهادة حفظ', name: profile?.name || 'بطل', gender: profile?.gender, verb: profile?.gender === 'girl' ? 'أتمّت حفظ وتسميع' : 'أتمّ حفظ وتسميع', main: 'سورة ' + Q30[s].name, sub: `${ar(ayat.length)} ${ayat.length > 10 ? 'آية' : 'آيات'} من القرآن الكريم`, stars: 5 }} onClose={() => setCert(null)} />}
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
         <Back onClick={back} />
         <div style={{ flex: 1 }}><h1 style={{ fontSize: 24, fontWeight: 800, color: '#1F8A61' }}>سورة {Q30[s].name}</h1><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896' }}>{ar(ayat.length)} آيات • بصوت {r.name}</div></div>
@@ -134,8 +171,8 @@ function Surah({ s, back }) {
       </div>
       <div className="card" style={{ position: 'relative', padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', fontWeight: 800 }}>
-          <span>كرّر كل آية:</span>
-          {[1, 3, 5].map((n) => <button key={n} type="button" onClick={() => setReps(n)} style={{ borderRadius: 12, padding: '6px 14px', border: 0, background: reps === n ? '#2FB383' : '#E3F7EE', color: reps === n ? '#fff' : '#1F8A61', fontFamily: 'inherit', fontWeight: 800, cursor: 'pointer' }}>{n === 1 ? 'مرة' : `${ar(n)} مرات`}</button>)}
+          <span>كام مرة أكرّر كل آية؟</span>
+          {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" onClick={() => setReps(n)} style={{ borderRadius: 12, width: 38, height: 36, padding: 0, fontSize: 17, border: 0, background: reps === n ? '#2FB383' : '#E3F7EE', color: reps === n ? '#fff' : '#1F8A61', fontFamily: 'inherit', fontWeight: 800, cursor: 'pointer' }}>{ar(n)}</button>)}
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {mode ? <button type="button" onClick={stop} style={btn('#E5484D', '#fff', { flex: 1 })}>■ وقّف</button>
@@ -162,6 +199,8 @@ function Surah({ s, back }) {
         </div>
         {heard && <div dir="rtl" style={{ fontSize: 16, fontWeight: 700, color: '#26336B', background: '#fff', borderRadius: 12, padding: '6px 10px' }}>«{heard}»</div>}
       </motion.div>}
+      {weak.length > 0 && !mode && <div className="card" style={{ position: 'relative', padding: '8px 12px', fontSize: 14, fontWeight: 800, color: '#B4531A', background: '#FFF3D6' }}>📌 آيات محتاجة مراجعة: {weak.slice().sort((a, b) => a - b).map((k) => ar(k + 1)).join('، ')}</div>}
+      {certs[s] && !mode && !cert && <button type="button" onClick={() => setCert(true)} style={{ position: 'relative', border: '3px solid #E8C77A', borderRadius: 18, padding: 10, background: 'linear-gradient(135deg,#FFF8E1,#FFE9B0)', color: '#8C5A1F', fontFamily: 'inherit', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>📜 شهادة حفظ سورة {Q30[s].name}</button>}
       {res && <div className="card" style={{ position: 'relative', padding: 10, textAlign: 'center', fontSize: 17, fontWeight: 800, color: res.good === res.all ? '#1F8A61' : '#B4531A', background: res.good === res.all ? '#D4F5E4' : '#FFF3D6' }}>
         {res.good === res.all ? `ما شاء الله! سمّعت السورة كلها صح 🌟` : `قريت ${ar(res.good)} من ${ar(res.all)} آيات صح… كمّل وانت هتحفظها 💪`}</div>}
       <div className="card" style={{ position: 'relative', padding: 12, display: 'flex', flexDirection: 'column', gap: 6, background: '#FFFDF5' }}>
