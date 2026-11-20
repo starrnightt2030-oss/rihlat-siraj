@@ -216,9 +216,138 @@ function Surah({ s, back }) {
   );
 }
 
+
+// ===== الاختبار الشامل: للسور اللي الطفل حفظها =====
+// الشيخ يقرا آية، والطفل يكمّل الآية اللي بعدها من حفظه. لو صح: «بارك الله فيك»، ولو غلط مرتين الشيخ يصحّحله.
+// في الآخر تقرير بمستوى كل سورة والآيات اللي محتاجة مراجعة، وشهادة لو النتيجة كويسة.
+export const REVIEW_LINES = ['الاختبار الشامل! الشيخ هيقرا آية، وانت كمّل الآية اللي بعدها.', 'بارك الله فيك!', 'كمّل الآية اللي بعدها.', 'خلّصت الاختبار! تعالى نشوف النتيجة.'];
+const levelOf = (p) => (p >= 90 ? ['ممتاز', '#1F8A61'] : p >= 75 ? ['جيد جدًا', '#2C6BC4'] : p >= 60 ? ['جيد', '#B07A12'] : ['محتاج مراجعة', '#E5484D']);
+function buildReview(surahs, weakAll, n = 10) {
+  const items = [];
+  const pool = surahs.filter((s) => Q30[s].ayat.length > 1);
+  if (!pool.length) return items;
+  // الآيات الضعيفة الأول، وبعدين توزيع عادل على السور
+  for (const s of pool) for (const k of weakAll[s] || []) if (k >= 1 && items.length < n / 2) items.push({ s, k });
+  let r = 0;
+  while (items.length < Math.min(n, pool.reduce((a, s) => a + Q30[s].ayat.length - 1, 0))) {
+    const s = pool[r++ % pool.length], k = 1 + Math.floor(Math.random() * (Q30[s].ayat.length - 1));
+    if (!items.some((x) => x.s === s && x.k === k)) items.push({ s, k });
+    if (r > 400) break;
+  }
+  return items.sort(() => Math.random() - 0.5);
+}
+function Review({ back }) {
+  const st = useStore((x) => x.settings), done = useStore((x) => x.hifz) || [], weakAll = useStore((x) => x.hifzWeak) || {}, markAyah = useStore((x) => x.markAyah), addHifzTest = useStore((x) => x.addHifzTest), profile = useStore((x) => x.profile);
+  const r = reciterById(st.reciter);
+  const [items] = useState(() => buildReview(done, weakAll));
+  const [i, setI] = useState(-1), [hits, setHits] = useState(null), [heard, setHeard] = useState(''), [note, setNote] = useState(null), [turn, setTurn] = useState(false), [res, setRes] = useState([]), [cert, setCert] = useState(false), [fin, setFin] = useState(false);
+  const run = useRef({ n: 0, cur: null, ear: null });
+  const alive = (my) => run.current.n === my;
+  const code = (s, k) => String(s).padStart(3, '0') + String(k + 1).padStart(3, '0');
+  useEffect(() => () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} run.current.ear?.stop(); hush(); }, []);
+  const go = async () => {
+    const my = ++run.current.n; const out = [];
+    await say(REVIEW_LINES[0]);
+    const m = await Promise.race([micReady(), wait(3000).then(() => 'unk')]);
+    for (let q = 0; q < items.length; q++) {
+      if (!alive(my)) return;
+      const { s, k } = items[q], words = ayahWords(Q30[s].ayat[k]);
+      setI(q); setHits(words.map(() => false)); setHeard(''); setNote(null); setTurn(false);
+      let early = null;
+      await playOnce(ayahUrl(r, code(s, k - 1), BASE), run.current, my, m === 'ok' ? () => { early = { ctx: { all: '' } }; early.ear = mk(words, early.ctx, true); } : null);
+      if (!alive(my)) { early?.ear.stop(); return; }
+      let sc = 0;
+      for (let tries = 1; tries <= 2; tries++) {
+        setTurn(true);
+        if (m !== 'ok') { await wait(6000); break; }
+        const ctx = tries === 1 && early ? early.ctx : { all: '' };
+        const ear = tries === 1 && early ? early.ear : mk(words, ctx, false); if (tries === 1 && early) ear.unmute();
+        run.current.ear = ear; const t = await ear.promise; run.current.ear = null;
+        if (!alive(my)) return;
+        ctx.all = (ctx.all + ' ' + (t || '')).trim(); const h = align(words, ctx.all); setHits(h); sc = score(h);
+        if (sc >= PASS) break;
+        if (tries === 1) { setTurn(false); sfx.soft(); setNote({ ok: false, t: t ? 'قربت! حاول تاني من أول الآية 🎤' : 'مسمعتكش… كمّل الآية بصوت عالي 🎤' }); await wait(1300); setNote(null); setHits(words.map(() => false)); setHeard(''); }
+      }
+      setTurn(false);
+      const ok = m === 'ok' ? sc >= PASS : null;
+      if (ok) { markAyah(s, k, false); sfx.good(); setHits(words.map(() => true)); setNote({ ok: true, t: 'بارك الله فيك! 🌟' }); await say(REVIEW_LINES[1]); }
+      else if (ok === false) { markAyah(s, k, true); sfx.soft(); setNote({ ok: false, t: 'اسمع الشيخ وهو بيقولها صح 👂' }); setHits(words.map(() => true)); await playOnce(ayahUrl(r, code(s, k), BASE), run.current, my); }
+      out.push({ s, k, ok: !!ok }); setRes([...out]);
+      await wait(700);
+    }
+    if (!alive(my)) return;
+    const per = {}; out.forEach((x) => { per[x.s] = per[x.s] || [0, 0]; per[x.s][1]++; if (x.ok) per[x.s][0]++; });
+    const pct = Math.round((out.filter((x) => x.ok).length / Math.max(1, out.length)) * 100);
+    addHifzTest({ at: Date.now(), pct, per: Object.fromEntries(Object.entries(per).map(([s, [a, b]]) => [s, Math.round((a / b) * 100)])), weak: out.filter((x) => !x.ok).map((x) => [x.s, x.k]) });
+    setFin(true); setI(-1); say(REVIEW_LINES[3]);
+  };
+  function mk(words, ctx, muted) {
+    const ear = hear({ muted, maxMs: 9000 + words.length * 900, waitMs: 8000, onText: (t) => { const txt = (ctx.all + ' ' + t).trim(); setHeard(txt); const h = align(words, txt); setHits(h); if (score(h) >= 0.9) ear.stop(); } });
+    return ear;
+  }
+  const head = (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <Back onClick={back} />
+      <div style={{ flex: 1 }}><h1 style={{ fontSize: 24, fontWeight: 800, color: '#1F8A61' }}>🏆 الاختبار الشامل</h1><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896' }}>{items.length ? `${ar(items.length)} آيات من السور اللي حفظتها` : 'احفظ سورة الأول'}</div></div>
+      <HomeBtn />
+    </div>
+  );
+  if (fin) {
+    const per = {}; res.forEach((x) => { per[x.s] = per[x.s] || [0, 0]; per[x.s][1]++; if (x.ok) per[x.s][0]++; });
+    const pct = Math.round((res.filter((x) => x.ok).length / Math.max(1, res.length)) * 100), [lv, lc] = levelOf(pct);
+    const weak = res.filter((x) => !x.ok);
+    const lines = Object.entries(per).map(([s, [a, b]]) => { const p = Math.round((a / b) * 100); return ['سورة ' + Q30[s].name, `${ar(p)}٪ • ${levelOf(p)[0]}`, levelOf(p)[1]]; });
+    return (
+      <div className="screen" style={{ gap: 12 }}>
+        <Sky tone="mint" />{pct >= 75 && <Confetti />}
+        {cert && <Certificate c={{ title: 'شهادة إتقان الحفظ', name: profile?.name || 'بطل', gender: profile?.gender, verb: profile?.gender === 'girl' ? 'اجتازت الاختبار الشامل في حفظ' : 'اجتاز الاختبار الشامل في حفظ', main: lines.length === 1 ? lines[0][0] : `${ar(lines.length)} سور من جزء عمّ`, sub: `النتيجة ${ar(pct)}٪ • ${lv}`, lines: lines.length > 1 ? lines : undefined, stars: pct >= 90 ? 5 : pct >= 75 ? 4 : 3 }} onClose={() => setCert(false)} />}
+        {head}
+        <div className="card" style={{ position: 'relative', padding: 16, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ fontSize: 44, fontWeight: 800, color: lc }}><bdi>{ar(pct)}٪</bdi></div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: lc }}>مستوى الحفظ: {lv}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#6D7896' }}>قلت {ar(res.filter((x) => x.ok).length)} من {ar(res.length)} آيات صح</div>
+        </div>
+        <div className="card" style={{ position: 'relative', padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ fontSize: 16, fontWeight: 800 }}>📊 مستوى كل سورة</div>
+          {lines.map(([n, v, c]) => <div key={n} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 800 }}><span className="hafs" style={{ fontSize: 19 }}>{n}</span><span style={{ color: c }}>{v}</span></div>)}
+        </div>
+        {weak.length > 0 && <div className="card" style={{ position: 'relative', padding: 12, background: '#FFF3D6', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#B4531A' }}>📌 محتاج تراجع:</div>
+          {weak.map((x) => <div key={x.s + '-' + x.k} style={{ fontSize: 15, fontWeight: 700 }}>سورة {Q30[x.s].name} — الآية {ar(x.k + 1)}</div>)}
+        </div>}
+        {pct >= 60 && <button type="button" onClick={() => setCert(true)} style={{ position: 'relative', border: '3px solid #E8C77A', borderRadius: 18, padding: 12, background: 'linear-gradient(135deg,#FFF8E1,#FFE9B0)', color: '#8C5A1F', fontFamily: 'inherit', fontSize: 17, fontWeight: 800, cursor: 'pointer' }}>📜 شهادة إتقان الحفظ</button>}
+        <button type="button" onClick={back} style={{ position: 'relative', border: 0, borderRadius: 18, padding: 14, background: '#2FB383', color: '#fff', fontFamily: 'inherit', fontSize: 17, fontWeight: 800, cursor: 'pointer' }}>تمام</button>
+      </div>
+    );
+  }
+  const it = items[i], words = it ? ayahWords(Q30[it.s].ayat[it.k]) : [];
+  return (
+    <div className="screen" style={{ gap: 12 }}>
+      <Sky tone="mint" />
+      {head}
+      {!items.length && <div className="card" style={{ position: 'relative', padding: 16, textAlign: 'center', fontSize: 17, fontWeight: 800 }}>لما تسمّع سورة كاملة في «حفّظني» هتقدر تعمل الاختبار الشامل 💪</div>}
+      {items.length > 0 && i < 0 && <button type="button" onClick={go} style={{ position: 'relative', border: 0, borderRadius: 20, padding: 18, background: '#2FB383', color: '#fff', fontFamily: 'inherit', fontSize: 20, fontWeight: 800, cursor: 'pointer', boxShadow: '0 6px 0 #1F8A61' }}>▶ ابدأ الاختبار</button>}
+      {it && <>
+        <div style={{ position: 'relative', display: 'flex', gap: 3 }}>{items.map((_, k) => <span key={k} style={{ flex: 1, height: 8, borderRadius: 4, background: k < i ? (res[k]?.ok ? '#2FB383' : '#FF7E6B') : k === i ? '#FFC93C' : '#E5E9F0' }} />)}</div>
+        <div className="card" style={{ position: 'relative', padding: 12, textAlign: 'center', background: '#FFFDF5' }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#6D7896' }}>سورة {Q30[it.s].name} • الشيخ بيقرا الآية {ar(it.k)}</div>
+          <div className="hafs" dir="rtl" style={{ fontSize: 24, color: '#26336B', lineHeight: 2 }}>{Q30[it.s].ayat[it.k - 1]} <span style={{ color: '#2FB383', fontSize: 18 }}>﴿{ar(it.k)}﴾</span></div>
+        </div>
+        <div className="card" style={{ position: 'relative', padding: 12, textAlign: 'center', border: '3px dashed #2FB383' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#1F8A61' }}>{turn ? <><motion.span animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1 }} style={{ display: 'inline-block' }}>🎤</motion.span> كمّل الآية {ar(it.k + 1)} من حفظك…</> : `الآية ${ar(it.k + 1)}`}</div>
+          <div className="hafs" dir="rtl" style={{ fontSize: 24, lineHeight: 2 }}>{words.map((w, j) => <span key={j} style={{ color: hits?.[j] ? '#1F8A61' : '#26336B', background: hits?.[j] ? '#D4F5E4' : 'transparent', borderRadius: 8, filter: hits?.[j] ? 'none' : 'blur(7px)', transition: 'all .25s' }}>{w} </span>)}</div>
+          {heard && <div dir="rtl" style={{ fontSize: 15, fontWeight: 700, color: '#6D7896' }}>«{heard}»</div>}
+        </div>
+        {note && <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card" style={{ position: 'relative', padding: 10, textAlign: 'center', fontSize: 18, fontWeight: 800, background: note.ok ? '#D4F5E4' : '#FFE9D6', color: note.ok ? '#1F8A61' : '#B4531A' }}>{note.t}</motion.div>}
+      </>}
+    </div>
+  );
+}
+
 export default function Hifz({ arg, back, go, swap }) {
   const done = useStore((x) => x.hifz) || [];
   useEffect(() => { if (!arg) hubSay(HIFZ_INTRO); return () => hush(); }, [arg]);
+  if (arg === 'test') return <Review back={back} />;
   if (arg && Q30[arg]) return <Surah key={arg} s={+arg} back={back} />;
   return (
     <div className="screen" style={{ gap: 12 }}>
@@ -229,6 +358,11 @@ export default function Hifz({ arg, back, go, swap }) {
         <div style={{ textAlign: 'center' }}><div style={{ fontSize: 22, fontWeight: 800, color: '#1F8A61' }}>{ar(done.length)}</div><div style={{ fontSize: 11, fontWeight: 700 }}>من {ar(SURAS.length)}</div></div>
       </div>
       <div className="progress" style={{ position: 'relative', height: 10 }}><i style={{ width: `${(done.length / SURAS.length) * 100}%`, background: 'linear-gradient(90deg,#2FB383,#1F8A61)' }} /></div>
+      {done.length > 0 && <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => { sfx.pop(); go('hifz', 'test'); }} className="card"
+        style={{ position: 'relative', border: 0, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, background: 'linear-gradient(120deg,#1F8A61,#2FB383)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'right' }}>
+        <span style={{ fontSize: 36 }}>🏆</span>
+        <span style={{ flex: 1 }}><span style={{ display: 'block', fontSize: 18, fontWeight: 800 }}>الاختبار الشامل</span><span style={{ display: 'block', fontSize: 13, fontWeight: 700, opacity: 0.95 }}>الشيخ يقرا آية وانت تكمّل اللي بعدها • تقرير وشهادة</span></span>
+      </motion.button>}
       <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 8 }}>
         {SURAS.map((s) => { const ok = done.includes(s);
           return (

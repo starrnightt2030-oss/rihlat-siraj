@@ -68,6 +68,9 @@ function Player({ s, go, back }) {
   const seek = (v) => { if (!el) return; el.currentTime = Math.max(0, Math.min(dur - 0.2, v)); setT(el.currentTime); };
   const tapCard = (k) => { sfx.pop(); setPop(k); setTimeout(() => setPop((p) => (p === k ? null : p)), 700); };
   const pct = dur ? Math.min(100, (t / dur) * 100) : 0;
+  // المجموعات: كذا أغنية في ملف واحد، ونقدر نتنقل بينهم
+  const ch = s.ch || null, chi = ch ? ch.reduce((a, c, k) => (t + 0.5 >= c ? k : a), 0) : 0;
+  const nextBtn = () => { if (ch && chi < ch.length - 1) { seek(ch[chi + 1]); el?.play().catch(() => {}); } else go('anashid', nextSong.id); };
 
   return (
     <div className="screen" style={{ gap: 12 }}>
@@ -94,13 +97,17 @@ function Player({ s, go, back }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 800, color: '#6D7896', direction: 'ltr', marginTop: -6 }}><span>{clock(t)}</span><span>{clock(dur)}</span></div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           <button type="button" aria-label="كرّر الأنشودة" onClick={() => { sfx.tap(); setRep(!rep); }} style={round(rep ? s.c : s.bg, rep ? '#fff' : s.c, { width: 44, height: 44, fontSize: 18 })}>🔁</button>
-          <button type="button" aria-label="الأنشودة اللي بعدها" onClick={() => go('anashid', nextSong.id)} style={round(s.bg, s.c, { width: 50, height: 50, fontSize: 18 })}>⏭</button>
+          <button type="button" aria-label="الأنشودة اللي بعدها" onClick={nextBtn} style={round(s.bg, s.c, { width: 50, height: 50, fontSize: 18 })}>⏭</button>
           <motion.button type="button" whileTap={{ scale: 0.9 }} aria-label={on ? 'وقّف' : 'شغّل'} onClick={toggle} style={round(s.c, '#fff', { width: 74, height: 74, fontSize: 30, boxShadow: `0 6px 0 ${s.c}88` })}>{on ? '❚❚' : '▶'}</motion.button>
           <button type="button" aria-label="الأنشودة اللي قبلها" onClick={() => go('anashid', prevSong.id)} style={round(s.bg, s.c, { width: 50, height: 50, fontSize: 18 })}>⏮</button>
           <button type="button" aria-label="رجّع ١٠ ثواني" onClick={() => seek(t - 10)} style={round(s.bg, s.c, { width: 44, height: 44, fontSize: 13 })}>١٠↺</button>
         </div>
       </div>
 
+      {ch && <div className="card" style={{ position: 'relative', padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: s.c }}>🎶 الأغنية {ar(chi + 1)} من {ar(ch.length)} في المجموعة</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{ch.map((c, k) => <button key={k} type="button" onClick={() => { seek(c); el?.play().catch(() => {}); }} style={{ width: 40, height: 40, borderRadius: 20, border: 0, background: k === chi ? s.c : s.bg, color: k === chi ? '#fff' : s.c, fontFamily: 'inherit', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>{ar(k + 1)}</button>)}</div>
+      </div>}
       <div style={{ position: 'relative' }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: '#26336B', marginBottom: 6 }}>✨ اتعلّم مع الأنشودة: {s.bt}</div>
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '4px 2px 8px', scrollbarWidth: 'none' }}>

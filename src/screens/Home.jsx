@@ -21,6 +21,7 @@ export const SECTIONS = [
   { id: 'qaida', t: 'القاعدة النورانية', d: 'أتعلم الحروف وأقرا بنفسي', c: '#2C6BC4', bg: '#E6F0FF', art: { scene: 'abc' }, go: ['qaida'] },
   { id: 'hifz', t: 'حفّظني', d: 'الشيخ يقرا وأنا أعيد وراه', c: '#1F8A61', bg: '#E3F7EE', emoji: '🎧', go: ['hifz'] },
   { id: 'tuhfa', t: 'تحفة الأطفال', d: 'أحكام التجويد بالشعر والشرح', c: '#8C5A1F', bg: '#FFF3D6', emoji: '📜', go: ['tuhfa'] },
+  { id: 'exam', t: 'اختبرني', d: '٩ فروع بالصوت وشهادة', c: '#B07A12', bg: '#FFF3D6', emoji: '🎓', go: ['exam'] },
   { id: 'anashid', t: 'أناشيدي', d: '٢١ أنشودة أغنّي وأتعلّم', c: '#E0609E', bg: '#FFEAF2', emoji: '🎵', go: ['anashid'] },
   { id: 'quran', t: 'قرآني', d: 'جزء عمّ كامل بصوت ٥ قرّاء', c: '#9B7BF2', bg: '#F1ECFF', art: { scene: 'books' }, units: ['quran', 'amma1', 'amma2', 'amma3'] },
   { id: 'stories', t: 'الحكايات', d: 'قصص الأنبياء والقرآن', c: '#3FA9F5', bg: '#E3F2FF', img: 'stickers/whale', go: ['stories'] },
