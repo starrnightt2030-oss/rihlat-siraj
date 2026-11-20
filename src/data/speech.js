@@ -1,6 +1,7 @@
 // كل جملة بيقولها سراج في التطبيق، من مكان واحد: التطبيق والسكريبت اللي بيولّد الصوت الاتنين بيقروا من هنا
 // الآيات نفسها مش بتتقري بصوت آلي: بنشغّل تلاوة القارئ (مشاري العفاسي) للآيات الكاملة بس
 import { UNITS } from './units.js';
+import { ALLQ, EXAM_LINES } from './questions.js';
 import { STORIES } from './stories.js';
 import { SPARKS, STICKER_NAMES } from './content.js';
 import { GIFTS } from './gifts.js';
@@ -84,6 +85,7 @@ export function allLines() {
   pegLines().forEach((t) => L.add(t));
   playLines().forEach((t) => L.add(t));
   ['يلا نحفظ! اختار سورة، والشيخ هيقرا كل آية وانت تعيد وراه.', 'ما شاء الله! حفظت السورة.', 'اختبر نفسك! قول الآيات من حفظك.'].forEach((t) => L.add(t));
+  ['الاختبار الشامل! الشيخ هيقرا آية، وانت كمّل الآية اللي بعدها.', 'بارك الله فيك!', 'كمّل الآية اللي بعدها.', 'خلّصت الاختبار! تعالى نشوف النتيجة.'].forEach((t) => L.add(t));
   ASMAA.forEach((a) => L.add(asmaLine(a))); L.add(ASMAA_INTRO);
   HADITH.forEach((h) => { L.add(hadithLine(h)); L.add(hadithMean(h)); });
   L.add('دي أحاديث النبي صلى الله عليه وسلم. اختار حديث وأنا أقولهولك وأشرحهولك.');
@@ -105,6 +107,7 @@ export function allLines() {
   RIDDLES.forEach((r) => r.h.forEach((h, k) => L.add(k ? h : 'مين أنا؟ ' + h)));
   L.add('تعادل! انتو الاتنين أبطال'); L.add('برافو للفريق الكسبان!'); L.add('برافو!');
   WELCOME_LINES.forEach((l) => L.add(l));
+  ALLQ.forEach((q) => L.add(q.q)); EXAM_LINES.forEach((t) => L.add(t));
   L.add('لسه مستخبي… كمّل رحلتك'); L.add('كل درس وحكاية بيزوّدوا نور الجرة');
   return [...L].filter(Boolean);
 }
