@@ -12,6 +12,7 @@ import { HADITH, hadithLine, hadithMean } from './hadith.js';
 import { ASMAA, asmaLine, ASMAA_INTRO } from './asmaa.js';
 import { BEDTIME, BED_INTRO, BED_MORAL, BED_END } from './bedtime.js';
 import { RAMADAN_LINES } from './ramadan.js';
+import { qaidaLines } from './qaida.js';
 import { PROPHETS, SAHABA } from './people.js';
 import { BADGES } from './badges.js';
 export const giftLine = (g) => 'هدية النهارده: ' + g.t + '. ' + g.sub;
@@ -75,6 +76,7 @@ export function allLines() {
   QB.forEach((q) => L.add(q.q));
   BEDTIME.forEach((b) => { b.s.forEach((x) => L.add(x[1])); L.add(BED_MORAL(b)); }); [BED_INTRO, BED_END.boy, BED_END.girl].forEach((t) => L.add(t));
   Object.values(RAMADAN_LINES).forEach((t) => L.add(t));
+  qaidaLines().forEach((t) => L.add(t));
   ASMAA.forEach((a) => L.add(asmaLine(a))); L.add(ASMAA_INTRO);
   HADITH.forEach((h) => { L.add(hadithLine(h)); L.add(hadithMean(h)); });
   L.add('دي أحاديث النبي صلى الله عليه وسلم. اختار حديث وأنا أقولهولك وأشرحهولك.');
