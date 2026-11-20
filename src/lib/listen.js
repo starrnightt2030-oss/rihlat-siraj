@@ -68,16 +68,32 @@ async function askMic() {
 
 // يسمع لحد ما الطفل يقول كلام ويسكت (أو يعدّي maxMs، أو يعدّي waitMs من غير ما يقول حاجة). stop() بتقفل السماع فورًا.
 // onFail بتتنادي لو المحرّك رفض يشتغل خالص (عشان الشاشة تقول للطفل/الأهل إن المايك مش شغال).
-export function hear({ onText, onFail, maxMs = 15000, waitMs = 7000 } = {}) {
-  let text = '', ended = false, resolve, timers = [], cleanup = () => {};
+// muted: يبدأ يسمع بدري (والشيخ لسه بيخلّص الآية) عشان المايك يبقى جاهز أول ما الطفل يتكلم.
+// أي كلام بيتسمع قبل unmute() (صوت الشيخ نفسه) بيتشال، والمهلات بتبدأ تعدّ من unmute()
+export function hear({ onText, onFail, maxMs = 15000, waitMs = 7000, muted = false } = {}) {
+  let text = '', ended = false, resolve, timers = [], cleanup = () => {}, mute = muted, pre = [], openR;
   const promise = new Promise((r) => { resolve = r; });
+  const opened = new Promise((r) => { openR = r; if (!muted) r(); });
   const finish = () => {
     if (ended) return; ended = true;
-    timers.forEach(clearTimeout); cleanup(); resolve(text.trim());
+    timers.forEach(clearTimeout); cleanup(); openR(); resolve(text.trim());
   };
-  const got = (t) => { if (ended || !t || !t.trim()) return; text = t; onText?.(text); };
-  timers.push(setTimeout(finish, maxMs));
-  timers.push(setTimeout(() => { if (!text) finish(); }, waitMs)); // الطفل ما قالش حاجة
+  const got = (t) => {
+    if (ended || !t || !t.trim()) return;
+    const w = t.trim().split(/\s+/);
+    if (mute) { pre = w; return; }
+    // نشيل كلام الشيخ اللي اتسمع قبل ما دور الطفل يبدأ (لو المحرّك لسه في نفس الجلسة)
+    let k = 0; while (k < pre.length && k < w.length && w[k] === pre[k]) k++;
+    const rest = w.slice(k).join(' ');
+    if (!rest) return;
+    text = rest; onText?.(text);
+  };
+  const arm = () => {
+    timers.push(setTimeout(finish, maxMs));
+    timers.push(setTimeout(() => { if (!text) finish(); }, waitMs)); // الطفل ما قالش حاجة
+  };
+  if (!muted) arm();
+  const unmute = () => { if (!mute || ended) return; mute = false; arm(); openR(); };
 
   if (native) {
     (async () => {
@@ -94,7 +110,7 @@ export function hear({ onText, onFail, maxMs = 15000, waitMs = 7000 } = {}) {
         } catch (e) { log('شباك جوجل اتقفل: ' + (e?.message || e)); }
         finish();
       };
-      if (getMode() === 'popup') return popup();
+      if (getMode() === 'popup') { await opened; if (!ended) popup(); return; }
       await p.removeAllListeners().catch(() => {});
       const hs = [await p.addListener('partialResults', (d) => { const t = d?.matches?.[0]; if (t && getMode() !== 'bg') setMode('bg'); got(t); })];
       hs.push(await p.addListener('listeningState', (d) => log('المحرّك: ' + (d?.status === 'started' ? 'بدأ يسمع كلام' : 'وقف'))));
@@ -114,14 +130,14 @@ export function hear({ onText, onFail, maxMs = 15000, waitMs = 7000 } = {}) {
         try {
           const { listening } = await p.isListening().catch(() => ({ listening: false }));
           if (ended || listening) return;
-          if (text) {
+          if (text && !mute) {
             // الطفل قال كلام وسكت: النتيجة الأخيرة بتيجي بعد ما المحرّك يقفل بشوية
             closing = true; timers.push(setTimeout(finish, 1200));
-          } else if (++restarts >= 4 && getMode() !== 'bg') {
+          } else if (!mute && ++restarts >= 4 && getMode() !== 'bg') {
             // السماع في الخلفية قفل كذا مرة من غير ولا كلمة: غالبًا مش شغال على الموبايل ده، نجرّب شباك جوجل
             switched = true; log('الخلفية مابتسمعش، هنجرّب شباك جوجل');
             clearInterval(poll); hs.forEach((h) => h.remove?.()); p.stop().catch(() => {}); // stop() في الإضافة مابترجعش، فمانستناهاش
-            await sleep(300); if (!ended) popup();
+            await sleep(300); await opened; if (!ended) popup();
           } else {
             await sleep(250); // المحرّك قفل من غير كلام (سكوت أو خطأ): نشغّله تاني
             if (!ended && !text) await begin();
@@ -141,12 +157,12 @@ export function hear({ onText, onFail, maxMs = 15000, waitMs = 7000 } = {}) {
         if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed' || ++fails >= 4) { onFail?.(e?.error || 'error'); finish(); }
       };
       // لو قفل من غير كلام نشغّله تاني، ولو الطفل قال وسكت نخلّص
-      r.onend = () => { if (ended) return; if (text) timers.push(setTimeout(finish, 300)); else timers.push(setTimeout(() => { if (!ended) begin(); }, 250)); };
+      r.onend = () => { if (ended) return; if (text && !mute) timers.push(setTimeout(finish, 300)); else timers.push(setTimeout(() => { if (!ended) begin(); }, 250)); };
       try { r.start(); } catch (e) { onFail?.(String(e?.message || e)); finish(); }
     };
     cleanup = () => { try { r?.abort(); } catch (e) {} };
     begin();
   } else finish();
 
-  return { promise, stop: finish };
+  return { promise, stop: finish, unmute };
 }
