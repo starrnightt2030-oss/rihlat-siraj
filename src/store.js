@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true, quran: true, reciter: 'alafasy', teach: false, reps: 1, remind: true }, lastSeen: 0, days: [], gift: '', azkar: { d: '', ids: [], secs: [] }, tasbih: 0, zdays: [], seenBadges: [], seenProphets: [], hdone: [], asmaSeen: [], rdays: {}, qaida: [], tuhfa: [], hifz: [] };
+const blank = { profile: null, stars: 0, light: 0, done: {}, sparks: [], stickers: [], medals: [], games: {}, settings: { sound: true, voice: true, motion: true, quran: true, reciter: 'alafasy', teach: false, reps: 1, remind: true }, lastSeen: 0, days: [], gift: '', azkar: { d: '', ids: [], secs: [] }, tasbih: 0, zdays: [], seenBadges: [], seenProphets: [], hdone: [], asmaSeen: [], rdays: {}, qaida: [], tuhfa: [], hifz: [], hifzWeak: {}, hifzCerts: {} };
 
 export const useStore = create(persist((set, get) => ({
   ...blank,
@@ -34,6 +34,10 @@ export const useStore = create(persist((set, get) => ({
   finishSec: (d, sec, light = 3) => { const s = get(); const z = s.azkar?.d === d ? s.azkar : { d, ids: [], secs: [] }; if (z.secs.includes(sec)) return false; set({ azkar: { ...z, secs: [...z.secs, sec] }, light: s.light + light, zdays: (s.zdays || []).includes(d) ? s.zdays : [...(s.zdays || []), d].slice(-120) }); return true; },
   ramTask: (d, id) => set((s) => { const all = s.rdays || {}, l = all[d] || []; return { rdays: { ...all, [d]: l.includes(id) ? l.filter((x) => x !== id) : [...l, id] } }; }),
   hifzToggle: (n) => set((s) => { const l = s.hifz || []; return { hifz: l.includes(n) ? l.filter((x) => x !== n) : [...l, n] }; }),
+  // آيات محتاجة مراجعة في كل سورة (رقم الآية من ٠): بتتشال أول ما الطفل يقولها صح
+  markAyah: (n, k, bad) => set((s) => { const all = s.hifzWeak || {}, l = all[n] || []; const has = l.includes(k); if (bad === has) return {}; return { hifzWeak: { ...all, [n]: bad ? [...l, k] : l.filter((x) => x !== k) } }; }),
+  // شهادات الحفظ: لكل سورة تاريخ أول مرة سمّعها كاملة
+  certify: (n, info) => set((s) => ({ hifzCerts: { ...(s.hifzCerts || {}), [n]: { ...(s.hifzCerts || {})[n], ...info } } })),
   tuhfaToggle: (id) => set((s) => { const l = s.tuhfa || []; return { tuhfa: l.includes(id) ? l.filter((x) => x !== id) : [...l, id] }; }),
   qaidaDone: (id) => set((s) => { const l = s.qaida || []; return l.includes(id) ? {} : { qaida: [...l, id] }; }),
   seeAsma: (k) => set((s) => { const l = s.asmaSeen || []; return l.includes(k) ? {} : { asmaSeen: [...l, k] }; }),
