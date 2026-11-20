@@ -12,7 +12,7 @@ import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say, hush, hubSay } from '../lib/voice';
 import { HomeBtn } from '../components/ui';
-import { micReady, hear } from '../lib/listen';
+import { micReady, hear, micLog, resetMicMode } from '../lib/listen';
 import { ayahWords, align, score } from '../lib/match';
 
 const BASE = import.meta.env.BASE_URL;
@@ -46,6 +46,17 @@ function Surah({ s, back }) {
   const run = useRef({ n: 0, cur: null, ear: null });
   const stop = () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} run.current.ear?.stop(); setOn(-1); setTurn(false); setMode(null); setHeard(''); setNote(null); };
   useEffect(() => { micReady().then(setMic); return () => { stop(); hush(); }; }, []);
+  // اختبار المايك: يسمع ٨ ثواني ويعرض اللي سمعه وإيه اللي حصل خطوة بخطوة (عشان نعرف المشكلة على أي موبايل)
+  const [mt, setMt] = useState(null);
+  const micTest = async () => {
+    stop(); hush(); setMt({ on: true, t: '', log: [] });
+    const m = await Promise.race([micReady(), wait(4000).then(() => 'لسه مستني الإذن')]);
+    setMic(m === 'ok' || m === 'denied' || m === 'none' ? m : mic);
+    if (m !== 'ok') { setMt({ on: false, t: '', log: [...micLog, 'النتيجة: ' + m] }); return; }
+    const ear = hear({ waitMs: 8000, maxMs: 14000, onText: (t) => setMt((x) => ({ ...x, t })) });
+    run.current.ear = ear; const t = await ear.promise; run.current.ear = null;
+    setMt({ on: false, t, log: [...micLog] });
+  };
   const r = reciterById(st.reciter);
   const code = (k) => String(s).padStart(3, '0') + String(k + 1).padStart(3, '0');
   const alive = (my) => run.current.n === my;
@@ -134,6 +145,14 @@ function Surah({ s, back }) {
             </>}
         </div>
         {(mic === 'none' || mic === 'fail') && <div style={{ fontSize: 12, fontWeight: 700, color: '#B07A12' }}>🎤 خدمة التعرّف على الكلام مش شغالة على الموبايل ده، فالشيخ مش هيقدر يسمعك. تأكد إن تطبيق Google متثبّت ومحدّث، وإن النت شغال، وبعدين افتح السورة تاني.</div>}
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+          <button type="button" onClick={micTest} disabled={mt?.on} style={{ border: 0, background: 'transparent', color: '#6D7896', fontFamily: 'inherit', fontSize: 13, fontWeight: 800, cursor: 'pointer', textDecoration: 'underline' }}>{mt?.on ? '🎤 قول أي كلام… أنا سامعك' : '🎤 اختبار المايك'}</button>
+          {mt && !mt.on && <button type="button" onClick={() => { resetMicMode(); setMt(null); }} style={{ border: 0, background: 'transparent', color: '#A3AAC0', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>↺ ابدأ من الأول</button>}
+        </div>
+        {mt && (mt.t || !mt.on) && <div style={{ background: mt.t ? '#E3F7EE' : '#FFF3D6', borderRadius: 12, padding: 8, fontSize: 12, fontWeight: 700, color: '#26336B', lineHeight: 1.7 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: mt.t ? '#1F8A61' : '#B4531A' }}>{mt.t ? `✓ سمعتك: «${mt.t}»` : mt.on ? '' : '✗ ماسمعتش حاجة'}</div>
+          {!mt.on && <div dir="rtl" style={{ color: '#6D7896' }}>{mt.log.map((l, k) => <div key={k}>{l}</div>)}</div>}
+        </div>}
         {mic === 'denied' && <div style={{ fontSize: 12, fontWeight: 700, color: '#B07A12' }}>🎤 عشان الشيخ يسمعك وانت بتقرا، اسمح للتطبيق يستخدم المايك من إعدادات الموبايل.</div>}
       </div>
       {(turn || note) && <motion.div key={(turn ? 't' : 'n') + on} initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card"
