@@ -14,6 +14,8 @@ import { BEDTIME, BED_INTRO, BED_MORAL, BED_END } from './bedtime.js';
 import { RAMADAN_LINES } from './ramadan.js';
 import { qaidaLines } from './qaida.js';
 import { tuhfaLines } from './tuhfa.js';
+import { pegLines } from './pegs.js';
+import { playLines } from './playData.js';
 import { PROPHETS, SAHABA } from './people.js';
 import { BADGES } from './badges.js';
 export const giftLine = (g) => 'هدية النهارده: ' + g.t + '. ' + g.sub;
@@ -79,6 +81,8 @@ export function allLines() {
   Object.values(RAMADAN_LINES).forEach((t) => L.add(t));
   qaidaLines().forEach((t) => L.add(t));
   tuhfaLines().forEach((t) => L.add(t));
+  pegLines().forEach((t) => L.add(t));
+  playLines().forEach((t) => L.add(t));
   ['يلا نحفظ! اختار سورة، والشيخ هيقرا كل آية وانت تعيد وراه.', 'ما شاء الله! حفظت السورة.', 'اختبر نفسك! قول الآيات من حفظك.'].forEach((t) => L.add(t));
   ASMAA.forEach((a) => L.add(asmaLine(a))); L.add(ASMAA_INTRO);
   HADITH.forEach((h) => { L.add(hadithLine(h)); L.add(hadithMean(h)); });
