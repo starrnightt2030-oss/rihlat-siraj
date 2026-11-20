@@ -47,11 +47,25 @@ async function draw(canvas, c) {
   T(c.name, W / 2, 610, `800 ${fs}px "Baloo Bhaijaan 2", sans-serif`, '#B07A12');
   g.strokeStyle = '#E8C77A'; g.lineWidth = 3; g.beginPath(); g.moveTo(W / 2 - 280, 690); g.lineTo(W / 2 + 280, 690); g.stroke();
   T(c.verb || '', W / 2, 760, '700 42px "Baloo Bhaijaan 2", sans-serif', '#6D5A35');
-  T(c.main || '', W / 2, 860, '700 96px Amiri, serif', '#1F8A61');
-  if (c.sub) T(c.sub, W / 2, 955, '700 38px "Baloo Bhaijaan 2", sans-serif', '#7A6A55');
+  const many = (c.lines?.length || 0) > 1; // شهادة شاملة: نتايج كتير في عمودين، والعنوان أصغر
+  T(c.main || '', W / 2, many ? 830 : 860, `700 ${many ? 70 : 96}px Amiri, serif`, '#1F8A61');
+  if (c.sub) T(c.sub, W / 2, many ? 900 : 955, '700 36px "Baloo Bhaijaan 2", sans-serif', '#7A6A55');
   let y = 1040;
+  if (many) {
+    const L = c.lines.slice(0, 10), rows = Math.ceil(L.length / 2), rowH = 44, y0 = 958;
+    g.fillStyle = 'rgba(31,138,97,.06)'; g.beginPath(); g.roundRect(130, y0 - 30, W - 260, rows * rowH + 16, 22); g.fill();
+    L.forEach(([l, v, col], k) => {
+      const colX = k < rows ? W / 2 + 400 : W / 2 - 20, yy = y0 + (k % rows) * rowH;
+      T(l, colX, yy, '700 28px "Baloo Bhaijaan 2", sans-serif', '#26336B', 'right');
+      T(v, colX - 370, yy, '800 28px "Baloo Bhaijaan 2", sans-serif', col || '#1F8A61', 'left');
+    });
+    const [dg, dh] = dateAr(); T('\u200F' + dg + (dh ? '  •  ' : ''), W / 2 + (dh ? 150 : 0), 1192, '700 26px "Baloo Bhaijaan 2", sans-serif', '#7A6A55');
+    if (dh) T('\u200F' + dh, W / 2 - 170, 1192, '700 24px "Baloo Bhaijaan 2", sans-serif', '#9A8A70');
+    T(c.footer || 'بارك الله فيك ونفع بك', W / 2, 1238, '700 32px Amiri, serif', '#1F8A61');
+    return canvas;
+  }
   if (c.lines?.length) {
-    const lines = c.lines.slice(0, 6), rowH = Math.min(52, 230 / lines.length);
+    const lines = c.lines, rowH = Math.min(52, 230 / lines.length);
     y = 1000;
     for (const [l, v, col] of lines) { T(l, W / 2 + 330, y, '700 32px "Baloo Bhaijaan 2", sans-serif', '#26336B', 'right'); T(v, W / 2 - 330, y, '800 32px "Baloo Bhaijaan 2", sans-serif', col || '#1F8A61', 'left'); y += rowH; }
     y += 10;
