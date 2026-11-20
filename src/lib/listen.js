@@ -16,7 +16,10 @@ const WebSR = typeof window !== 'undefined' ? window.SpeechRecognition || window
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // هل نقدر نسمع؟ بيطلب إذن المايك مرة واحدة. بيرجع 'ok' أو 'denied' أو 'none'
-export async function micReady() {
+// طلب واحد بس في نفس الوقت: لو اتطلب الإذن تاني والأول لسه مفتوح، أندرويد ممكن ميردّش خالص
+let asking = null;
+export function micReady() { return asking || (asking = askMic().finally(() => { asking = null; })); }
+async function askMic() {
   try {
     if (native) {
       const p = await plugin();
