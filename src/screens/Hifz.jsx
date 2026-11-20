@@ -39,7 +39,8 @@ function Surah({ s, back }) {
   const words = useMemo(() => ayat.map(ayahWords), [s]);
   const [reps, setReps] = useState(3), [on, setOn] = useState(-1), [turn, setTurn] = useState(false), [hide, setHide] = useState(false), [party, setParty] = useState(false);
   // سمّعني: المايك بيسمع الطفل وهو بيعيد، والكلمات بتنوّر أول ما يقولها
-  const [mic, setMic] = useState('unk'); // unk | ok | denied | none
+  const [mic, setMic] = useState('unk'); // unk | ok | denied | none | fail
+  const micNow = async () => { if (mic !== 'unk') return mic; const m = await micReady(); setMic(m); return m; };
   const [heard, setHeard] = useState(''), [hits, setHits] = useState({}), [note, setNote] = useState(null), [seen, setSeen] = useState({}), [mode, setMode] = useState(null), [res, setRes] = useState(null);
   const run = useRef({ n: 0, cur: null, ear: null });
   const stop = () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} run.current.ear?.stop(); setOn(-1); setTurn(false); setMode(null); setHeard(''); setNote(null); };
@@ -52,7 +53,7 @@ function Surah({ s, back }) {
     let all = ''; let best = words[k].map(() => false);
     setHeard(''); setHits((h) => ({ ...h, [k]: best }));
     for (let round = 0; round < 3 && alive(my); round++) {
-      const ear = hear({ maxMs: Math.max(6000, est * 2.2 + 3000), waitMs: round ? 4000 : 7000,
+      const ear = hear({ maxMs: Math.max(6000, est * 2.2 + 3000), waitMs: round ? 4000 : 8000, onFail: () => { run.current.micFail = true; setMic('fail'); },
         onText: (t) => { const txt = (all + ' ' + t).trim(); setHeard(txt); const h = align(words[k], txt); setHits((x) => ({ ...x, [k]: h })); if (score(h) >= 0.85) ear.stop(); } });
       run.current.ear = ear;
       const t = await ear.promise; run.current.ear = null;
@@ -66,6 +67,7 @@ function Surah({ s, back }) {
   // الشيخ يقرا والطفل يعيد وراه
   const start = async (from = 0) => {
     stop(); hush(); const my = ++run.current.n; setMode('rep'); setRes(null);
+    const m = await micNow(); if (!alive(my)) return;
     for (let k = from; k < ayat.length; k++) {
       for (let t = 0; t < reps; t++) {
         if (!alive(my)) return;
@@ -73,7 +75,7 @@ function Surah({ s, back }) {
         const d = await playOnce(ayahUrl(r, code(k), BASE), run.current, my);
         if (!alive(my)) return;
         setTurn(true);
-        if (mic === 'ok') {
+        if (m === 'ok' && !run.current.micFail) {
           const { sc, said } = await listen(k, my, d * 1000);
           if (!alive(my)) return;
           setTurn(false);
@@ -130,6 +132,7 @@ function Surah({ s, back }) {
               <button type="button" onClick={mic === 'ok' ? test : () => { setHide(!hide); if (!hide) say('اختبر نفسك! قول الآيات من حفظك.'); }} style={btn('#fff', '#1F8A61', { flex: 2, border: '3px solid #2FB383', fontSize: 14, padding: 10 })}>{mic === 'ok' ? '🎤 سمّعني' : hide ? '👁 اظهر الآيات' : '🙈 اختبر نفسك'}</button>
             </>}
         </div>
+        {(mic === 'none' || mic === 'fail') && <div style={{ fontSize: 12, fontWeight: 700, color: '#B07A12' }}>🎤 خدمة التعرّف على الكلام مش شغالة على الموبايل ده، فالشيخ مش هيقدر يسمعك. تأكد إن تطبيق Google متثبّت ومحدّث، وإن النت شغال، وبعدين افتح السورة تاني.</div>}
         {mic === 'denied' && <div style={{ fontSize: 12, fontWeight: 700, color: '#B07A12' }}>🎤 عشان الشيخ يسمعك وانت بتقرا، اسمح للتطبيق يستخدم المايك من إعدادات الموبايل.</div>}
       </div>
       {(turn || note) && <motion.div key={(turn ? 't' : 'n') + on} initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card"
