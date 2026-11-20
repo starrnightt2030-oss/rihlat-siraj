@@ -27,6 +27,7 @@ import { BadgeWatcher } from './components/Badges';
 import { syncReminders } from './lib/remind';
 import { unlockAudio } from './lib/sound';
 import { hush } from './lib/voice';
+import { track, go, swap, back, home } from './lib/nav';
 
 // تنقّل بسيط بالـ hash عشان زرار الرجوع في الموبايل يشتغل
 const parse = () => { const [name, ...rest] = (location.hash.slice(2) || '').split('/'); return { name: name || 'splash', arg: rest.join('/') }; };
@@ -35,15 +36,13 @@ export default function App() {
   const [route, setRoute] = useState(parse);
   const profile = useStore((s) => s.profile);
   const motionOn = useStore((s) => s.settings.motion);
-  useEffect(() => { const f = () => { hush(); setRoute(parse()); }; addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
+  useEffect(() => { const f = () => { track(); hush(); setRoute(parse()); }; addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   useEffect(() => { const f = () => unlockAudio(); addEventListener('pointerdown', f, { once: true }); }, []);
-  const go = (name, arg) => { location.hash = '#/' + name + (arg ? '/' + arg : ''); };
-  const back = () => (history.length > 1 ? history.back() : go('home'));
 
   let { name, arg } = route;
   if (!profile && !['splash', 'onboard', 'parent'].includes(name)) name = 'splash';
   const tabs = ['home', 'island', 'stories', 'games', 'album'].includes(name) || (name === 'adhkar' && !arg);
-  const P = { go, back, arg };
+  const P = { go, back, swap, home, arg };
   const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent, adhkar: Adhkar, home: Home, sec: Section, anbiya25: (p) => <People {...p} kind="anbiya" />, sahaba: (p) => <People {...p} kind="sahaba" />, hadith: Hadith, asmaa: Asmaa, bedtime: Bedtime, ramadan: Ramadan, qaida: Qaida, tuhfa: Tuhfa, hifz: Hifz };
   const S = screens[name] || Journey;
 
