@@ -11,6 +11,18 @@ import { say, hush, hubSay } from '../lib/voice';
 import { HomeBtn } from '../components/ui';
 import SyncSong, { Fill } from '../components/SyncSong';
 import { TUHFA_SONG } from '../data/tuhfaSong';
+import { EX_AUDIO } from '../data/tuhfaEx';
+
+// أمثلة القواعد بصوت الشيخ الحصري (مقصوصة من تلاوة الآية نفسها) عشان الطفل يسمع النطق الصح
+const exUrl = (w) => EX_AUDIO[w] && `${import.meta.env.BASE_URL}audio/tuhfa-ex/${EX_AUDIO[w]}`;
+let exEl = null;
+const stopEx = () => { try { exEl?.pause(); } catch (e) {} exEl = null; };
+const playEx = (w) => new Promise((res) => {
+  stopEx(); const u = exUrl(w); if (!u) return res();
+  const a = new Audio(u); exEl = a;
+  a.onended = a.onerror = a.onpause = () => res();
+  a.play().catch(() => res());
+});
 
 const Back = ({ onClick }) => (
   <button type="button" className="icon-btn" aria-label="رجوع" onClick={onClick}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22306A" strokeWidth="3" strokeLinecap="round"><path d="M9 5l7 7-7 7" /></svg></button>
@@ -42,10 +54,10 @@ function Bab({ b, i, back, next, go }) {
   const hifz = useStore((s) => s.tuhfa) || [], toggle = useStore((s) => s.tuhfaToggle);
   // الباب كله بيتقال ورا بعضه لوحده: الأبيات ← الشرح ← القواعد، والكارت اللي بيتقال بيتلوّن وبيظهر قدامك
   const items = [...b.v.map((v, k) => ({ id: 'v' + k, t: verseLine(v) })), ...b.sh.map((t, k) => ({ id: 's' + k, t })), ...b.rules.map((r, k) => ({ id: 'r' + k, t: r.n + '. ' + r.d })), ...(tuhfaQuiz(b).length ? [{ id: 'g', t: TUHFA_Q }] : [])];
-  const [cur, setCur] = useState(null);
+  const [cur, setCur] = useState(null), [exOn, setExOn] = useState(null);
   const run = useRef(0), refs = useRef({});
   const n0 = firstVerse(i);
-  const stop = () => { run.current++; hush(); setCur(null); };
+  const stop = () => { run.current++; hush(); stopEx(); setCur(null); setExOn(null); };
   const playFrom = async (from = 0) => {
     const my = ++run.current;
     for (let k = from; k < items.length; k++) {
@@ -54,13 +66,23 @@ function Bab({ b, i, back, next, go }) {
       refs.current[items[k].id]?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
       await say(items[k].t);
       if (run.current !== my) return;
+      // بعد شرح القاعدة: الشيخ يقرا أمثلتها واحد واحد، والمثال اللي بيتقري بينوّر
+      const rule = items[k].id[0] === 'r' && b.rules[+items[k].id.slice(1)];
+      for (const w of (rule?.ex || []).filter(exUrl)) {
+        await new Promise((r) => setTimeout(r, 300));
+        if (run.current !== my) return;
+        setExOn(items[k].id + w); await playEx(w); setExOn(null);
+        if (run.current !== my) return;
+      }
       await new Promise((r) => setTimeout(r, 350));
     }
     if (run.current === my) setCur(null);
   };
-  const tap = (id) => { sfx.tap(); playFrom(items.findIndex((x) => x.id === id)); };
+  const tap = (id) => { sfx.tap(); stopEx(); playFrom(items.findIndex((x) => x.id === id)); };
+  // دوس على أي مثال: الشيخ يقراه لوحده
+  const tapEx = async (e, id, w) => { e.stopPropagation(); if (!exUrl(w)) return; run.current++; hush(); setCur(null); setExOn(id + w); await playEx(w); setExOn((x) => (x === id + w ? null : x)); };
   const reg = (id) => (el) => { refs.current[id] = el; };
-  useEffect(() => { const t = setTimeout(() => playFrom(0), 450); return () => { clearTimeout(t); run.current++; hush(); }; }, [b.id]);
+  useEffect(() => { const t = setTimeout(() => playFrom(0), 450); return () => { clearTimeout(t); run.current++; hush(); stopEx(); }; }, [b.id]);
   const ok = hifz.includes(b.id);
   return (
     <div className="screen" style={{ gap: 12 }}>
@@ -88,7 +110,7 @@ function Bab({ b, i, back, next, go }) {
           style={{ position: 'relative', border: 0, borderInlineStart: `6px solid ${b.c}`, outline: cur === 'r' + k ? `3px solid ${b.c}` : 'none', textAlign: 'right', padding: 12, fontFamily: 'inherit', background: cur === 'r' + k ? b.bg : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, color: '#26336B' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><b style={{ fontSize: 18, color: b.c }}>{r.n}</b>{r.l && <span style={{ fontSize: 13, fontWeight: 800, background: b.bg, color: b.c, borderRadius: 10, padding: '2px 10px' }}>{r.l}</span>}</span>
           <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.7 }}>{r.d}</span>
-          {r.ex.length > 0 && <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{r.ex.map((w) => <span key={w} className="ayah" style={{ fontSize: 21, background: '#FFF6DD', borderRadius: 10, padding: '0 10px', color: '#3A2A12' }}>{w}</span>)}</span>}
+          {r.ex.length > 0 && <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{r.ex.map((w) => { const on = exOn === 'r' + k + w; return <span key={w} role="button" tabIndex={0} aria-label={'اسمع الشيخ يقرا ' + w} onClick={(e) => tapEx(e, 'r' + k, w)} className="ayah" style={{ fontSize: 21, background: on ? '#FFD66B' : '#FFF6DD', outline: on ? `3px solid ${b.c}` : 'none', transform: on ? 'scale(1.08)' : 'none', transition: 'all .2s', borderRadius: 10, padding: '0 10px', color: '#3A2A12', cursor: 'pointer' }}>{exUrl(w) ? (on ? '🔊 ' : '▶ ') : ''}{w}</span>; })}</span>}
         </motion.button>
       ))}
       <div ref={reg('g')} onPointerDownCapture={() => { if (cur) { run.current++; setCur(null); } }}><Game b={b} /></div>

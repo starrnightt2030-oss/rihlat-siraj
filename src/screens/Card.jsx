@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Sky from '../components/Sky';
 import Siraj from '../components/Siraj';
@@ -24,12 +24,17 @@ const audOf = (s) => s.k === 'ayah' && s.aud ? [].concat(s.aud) : s.k === 'surah
 // نص المصحف (حفص) للسور اللي عندنا، عشان الكتابة تبقى مطابقة للمصحف
 const uth = (s, k, v) => Q30[+s.sura]?.ayat[(s.from || 1) - 1 + k] || v;
 const speak = (s) => say(stepLine(s), audOf(s), stepPost(s));
+// السور الطويلة متقسّمة على كذا درس: الجزء اللي بعد ده (نفس السورة، والآيات اللي بعدها على طول)
+const nextPart = (s) => ALL_CARDS.find((c) => c.steps?.some((t) => t.k === 'surah' && t.sura === s.sura && (t.from || 1) === (s.from || 1) + s.verses.length));
+// لما الشيخ يخلّص جزء ويكمّل على اللي بعده، الدرس الجديد يبدأ بالتلاوة على طول من غير مقدمة
+let contId = null;
 
-export default function Card({ arg, go, back }) {
+export default function Card({ arg, go, back, swap }) {
   const c = cardById(arg) || ALL_CARDS[0];
   const u = c.unit;
   const complete = useStore((s) => s.complete);
-  const [i, setI] = useState(0);
+  const [cont] = useState(() => { const v = contId === c.id; contId = null; return v; });
+  const [i, setI] = useState(() => (cont ? Math.max(0, c.steps.findIndex((s) => s.k === 'surah')) : 0));
   const [phase, setPhase] = useState('learn');
   const [pick, setPick] = useState(null), [miss, setMiss] = useState(0), [res, setRes] = useState(null);
   const step = c.steps[i];
@@ -40,7 +45,8 @@ export default function Card({ arg, go, back }) {
   const total = c.steps.length + 1;
   const pos = phase === 'learn' ? i + 1 : total;
   useEffect(() => () => hush(), []);
-  useEffect(() => { if (phase === 'learn') speak(step); else if (phase === 'quiz') say(c.quiz.uth ? 'كمّل الآية دي!' : c.quiz.q); }, [i, phase]);
+  const first = useRef(true);
+  useEffect(() => { const c0 = cont && first.current && step.k === 'surah'; first.current = false; if (c0) recite(audOf(step)); else if (phase === 'learn') speak(step); else if (phase === 'quiz') say(c.quiz.uth ? 'كمّل الآية دي!' : c.quiz.q); }, [i, phase]);
 
   const next = () => { sfx.whoosh(); if (i < c.steps.length - 1) setI(i + 1); else setPhase('quiz'); };
   const answer = (k) => {
@@ -70,7 +76,7 @@ export default function Card({ arg, go, back }) {
       <AnimatePresence mode="wait">
         {phase === 'learn' && (
           <motion.div data-step key={i} initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 40 }} transition={{ duration: 0.28 }} style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {PRACTICE.has(step.k) ? <Practice s={step} u={u} g={g} onSolve={() => setSolved(true)} /> : <Step s={step} u={u} g={g} />}
+            {PRACTICE.has(step.k) ? <Practice s={step} u={u} g={g} onSolve={() => setSolved(true)} /> : <Step s={step} u={u} g={g} onMore={(id) => { contId = id; swap('card', id); }} />}
           </motion.div>
         )}
         {phase === 'quiz' && (
@@ -120,7 +126,7 @@ export default function Card({ arg, go, back }) {
   );
 }
 
-function Step({ s, u, g }) {
+function Step({ s, u, g, onMore }) {
   if (s.k === 'pose' || s.k === 'wudu' || s.k === 'scene') return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div className="card" style={{ position: 'relative', padding: '14px 10px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', background: u.soft }}>
@@ -213,17 +219,29 @@ function Step({ s, u, g }) {
       </div>
     </div>
   );
-  if (s.k === 'surah') return <Surah s={s} u={u} />;
+  if (s.k === 'surah') return <Surah s={s} u={u} onMore={onMore} />;
   return null;
 }
 
-function Surah({ s, u }) {
-  const [now, setNow] = useState(null);
-  useEffect(() => onAyah(setNow), []);
-  const from = s.from || 1;
+function Surah({ s, u, onMore }) {
+  const [now, setNow] = useState(null), [auto, setAuto] = useState(false);
+  const from = s.from || 1, total = Q30[+s.sura]?.ayat.length || from + s.verses.length - 1, to = from + s.verses.length - 1;
+  const more = to < total ? nextPart(s) : null, last = codeOf(s, s.verses.length - 1);
+  // لو الشيخ قرا الجزء ده لآخره، يكمّل باقي السورة لوحده في الجزء اللي بعده
+  useEffect(() => {
+    let prev = null; const seen = new Set();
+    const off = onAyah((c) => {
+      setNow(c);
+      if (c) { seen.add(c); setAuto(false); }
+      else if (prev === last && seen.size > 1 && more) setAuto(true);
+      prev = c;
+    });
+    return () => { off(); };
+  }, []);
+  useEffect(() => { if (!auto) return; const t = setTimeout(() => onMore?.(more.id), 1800); return () => clearTimeout(t); }, [auto]);
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ textAlign: 'center' }}><span className="ribbon" style={{ '--c': u.color, fontSize: 18 }}>سورة {s.name}</span><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896', margin: '4px 0' }}>دوس على أي آية تسمعها وكرّرها</div><ReciterChip codes={s.verses.map((_, k) => codeOf(s, k))} color={u.dark} /></div>
+      <div style={{ textAlign: 'center' }}><span className="ribbon" style={{ '--c': u.color, fontSize: 18 }}>سورة {s.name}</span><div style={{ fontSize: 13, fontWeight: 700, color: '#6D7896', margin: '4px 0' }}>دوس على أي آية تسمعها وكرّرها</div><ReciterChip codes={s.verses.map((_, k) => codeOf(s, k))} color={u.dark} />{total > s.verses.length && <div style={{ fontSize: 13, fontWeight: 800, color: u.dark, marginTop: 4 }}>الآيات {ar(from)}–{ar(to)} من {ar(total)}</div>}</div>
       {s.sura !== '001' && from === 1 && <div className="hafs" style={{ textAlign: 'center', fontSize: 22, color: '#6E4FD0' }}>بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</div>}
       {s.verses.map(([v, m], k) => (
         <motion.button type="button" key={k} onClick={() => { sfx.tap(); recite([codeOf(s, k)]); }} data-now={now === codeOf(s, k) || undefined} aria-label={'اسمع الآية ' + (from + k)} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: Math.min(k, 8) * 0.06 }} className="card"
@@ -236,6 +254,9 @@ function Surah({ s, u }) {
           <Icon d={I.sound} size={22} color={TILE_C[k % 6]} />
         </motion.button>
       ))}
+      {more && <motion.button type="button" onClick={() => onMore?.(more.id)} animate={auto ? { scale: [1, 1.05, 1] } : {}} transition={{ repeat: auto ? Infinity : 0, duration: 0.8 }}
+        style={{ border: 0, borderRadius: 18, padding: 12, background: u.color, color: '#fff', fontFamily: 'inherit', fontSize: 17, fontWeight: 800, cursor: 'pointer', boxShadow: `0 5px 0 ${u.dark}` }}>
+        {auto ? 'الشيخ هيكمّل السورة…' : `كمّل باقي السورة (الآيات ${ar(to + 1)}–${ar(to + more.steps.find((t) => t.k === 'surah').verses.length)}) ◀`}</motion.button>}
     </div>
   );
 }
