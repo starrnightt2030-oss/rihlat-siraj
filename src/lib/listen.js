@@ -68,6 +68,16 @@ async function askMic() {
 
 // يسمع لحد ما الطفل يقول كلام ويسكت (أو يعدّي maxMs، أو يعدّي waitMs من غير ما يقول حاجة). stop() بتقفل السماع فورًا.
 // onFail بتتنادي لو المحرّك رفض يشتغل خالص (عشان الشاشة تقول للطفل/الأهل إن المايك مش شغال).
+// المستمعين لأحداث أندرويد بيتسجّلوا مرة واحدة بس، والجلسة الشغالة دلوقتي (active) هي اللي بتاخد الكلام
+let active = null, wired = null;
+const wire = (p) => wired || (wired = (async () => {
+  await p.removeAllListeners().catch(() => {});
+  await p.addListener('partialResults', (d) => active?.got(d?.matches?.[0]));
+  await p.addListener('listeningState', (d) => log('المحرّك: ' + (d?.status === 'started' ? 'بدأ يسمع كلام' : 'وقف')));
+})());
+// تجهيز المايك أول ما الشاشة تفتح، عشان أول سماع يبدأ من غير تأخير
+export function warmMic() { if (native) wire(plugin()).catch(() => {}); }
+
 // muted: يبدأ يسمع بدري (والشيخ لسه بيخلّص الآية) عشان المايك يبقى جاهز أول ما الطفل يتكلم.
 // أي كلام بيتسمع قبل unmute() (صوت الشيخ نفسه) بيتشال، والمهلات بتبدأ تعدّ من unmute()
 export function hear({ onText, onFail, maxMs = 15000, waitMs = 7000, muted = false } = {}) {
@@ -111,9 +121,10 @@ export function hear({ onText, onFail, maxMs = 15000, waitMs = 7000, muted = fal
         finish();
       };
       if (getMode() === 'popup') { await opened; if (!ended) popup(); return; }
-      await p.removeAllListeners().catch(() => {});
-      const hs = [await p.addListener('partialResults', (d) => { const t = d?.matches?.[0]; if (t && getMode() !== 'bg') setMode('bg'); got(t); })];
-      hs.push(await p.addListener('listeningState', (d) => log('المحرّك: ' + (d?.status === 'started' ? 'بدأ يسمع كلام' : 'وقف'))));
+      // السماع بيبدأ على طول: المستمعين متسجّلين مرة واحدة من بدري (warmMic)، فمفيش خطوات مع أندرويد قبل start
+      active = { got: (t) => { if (t && getMode() !== 'bg') setMode('bg'); got(t); } };
+      const me = active, hs = [{ remove: () => { if (active === me) active = null; } }];
+      if (!wired) await wire(p);
       let fails = 0, busy = false, closing = false, restarts = 0, switched = false;
       const begin = async () => {
         try {
