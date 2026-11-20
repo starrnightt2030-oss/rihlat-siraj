@@ -1,3 +1,4 @@
+import { home } from '../lib/nav';
 import { motion } from 'framer-motion';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
@@ -29,7 +30,7 @@ export function IconBtn({ icon, label, onClick, color = '#22306A', sound = 'back
   return <button type="button" className="icon-btn" aria-label={label} style={style} onClick={() => { sfx[sound]?.(); onClick?.(); }}><Icon d={icon} color={color} /></button>;
 }
 export function HomeBtn({ style }) {
-  return <IconBtn icon={I.home} label="الرئيسية" sound="tap" color="#E07F1E" style={style} onClick={() => { location.hash = '#/home'; }} />;
+  return <IconBtn icon={I.home} label="الرئيسية" sound="tap" color="#E07F1E" style={style} onClick={home} />;
 }
 export function StarsChip() {
   const stars = useStore((s) => s.stars);
