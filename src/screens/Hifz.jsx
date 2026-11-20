@@ -13,7 +13,7 @@ import { sfx } from '../lib/sound';
 import { say, hush, hubSay } from '../lib/voice';
 import { HomeBtn } from '../components/ui';
 import Certificate from '../components/Certificate';
-import { micReady, hear, micLog, resetMicMode } from '../lib/listen';
+import { micReady, hear, micLog, resetMicMode, warmMic } from '../lib/listen';
 import { ayahWords, align, score } from '../lib/match';
 
 const BASE = import.meta.env.BASE_URL;
@@ -53,7 +53,7 @@ function Surah({ s, back }) {
   const [heard, setHeard] = useState(''), [hits, setHits] = useState({}), [note, setNote] = useState(null), [seen, setSeen] = useState({}), [mode, setMode] = useState(null), [res, setRes] = useState(null);
   const run = useRef({ n: 0, cur: null, ear: null });
   const stop = () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} run.current.ear?.stop(); setOn(-1); setTurn(false); setMode(null); setHeard(''); setNote(null); };
-  useEffect(() => { micReady().then(setMic); return () => { stop(); hush(); }; }, []);
+  useEffect(() => { micReady().then((m) => { setMic(m); if (m === 'ok') warmMic(); }); return () => { stop(); hush(); }; }, []);
   // اختبار المايك: يسمع ٨ ثواني ويعرض اللي سمعه وإيه اللي حصل خطوة بخطوة (عشان نعرف المشكلة على أي موبايل)
   const [mt, setMt] = useState(null);
   const micTest = async () => {
@@ -105,7 +105,8 @@ function Surah({ s, back }) {
           setOn(k); setTurn(false); setHeard(''); setHits((h) => ({ ...h, [k]: null }));
           const useMic = m === 'ok' && !run.current.micFail;
           let early = null;
-          const d = await playOnce(ayahUrl(r, code(k), BASE), run.current, my, useMic ? () => { if (alive(my)) early = prepare(k, (words[k].length * 700)); } : null);
+          // المايك بيفتح أول ما الشيخ يخلّص (مش قبلها، عشان مايسمعش صوت الشيخ ويقفل لوحده)
+          const d = await playOnce(ayahUrl(r, code(k), BASE), run.current, my);
           if (!alive(my)) { early?.ear.stop(); return; }
           setNote(null); setTurn(true);
           if (!useMic) { early?.ear.stop(); await wait(Math.max(2500, d * 1100)); break; } // من غير مايك: وقت للطفل يعيد
@@ -249,12 +250,13 @@ function Review({ back }) {
     const my = ++run.current.n; const out = [];
     await say(REVIEW_LINES[0]);
     const m = await Promise.race([micReady(), wait(3000).then(() => 'unk')]);
+    if (m === 'ok') warmMic();
     for (let q = 0; q < items.length; q++) {
       if (!alive(my)) return;
       const { s, k } = items[q], words = ayahWords(Q30[s].ayat[k]);
       setI(q); setHits(words.map(() => false)); setHeard(''); setNote(null); setTurn(false);
       let early = null;
-      await playOnce(ayahUrl(r, code(s, k - 1), BASE), run.current, my, m === 'ok' ? () => { early = { ctx: { all: '' } }; early.ear = mk(words, early.ctx, true); } : null);
+      await playOnce(ayahUrl(r, code(s, k - 1), BASE), run.current, my);
       if (!alive(my)) { early?.ear.stop(); return; }
       let sc = 0;
       for (let tries = 1; tries <= 2; tries++) {

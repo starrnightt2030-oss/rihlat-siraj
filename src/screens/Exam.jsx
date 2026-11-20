@@ -14,7 +14,7 @@ import { ALL_CATS, LEVELS, pickQs, matchOption, EXAM_INTRO, EXAM_AGAIN } from '.
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
 import { say, hush } from '../lib/voice';
-import { micReady, hear } from '../lib/listen';
+import { micReady, hear, warmMic } from '../lib/listen';
 
 const PASS = 60;
 const Back = ({ onClick }) => (
@@ -29,7 +29,7 @@ function Quiz({ cat, lv, back, done }) {
   const [i, setI] = useState(0), [score, setScore] = useState(0), [pick, setPick] = useState(null), [heard, setHeard] = useState(''), [listening, setListening] = useState(false), [msg, setMsg] = useState('');
   const run = useRef({ n: 0, ear: null }), mic = useRef('unk'), picked = useRef(false), scoreR = useRef(0), qR = useRef(null);
   const q = qs[i]; qR.current = q;
-  useEffect(() => { micReady().then((m) => { mic.current = m; }); return () => { run.current.n++; run.current.ear?.stop(); hush(); }; }, []);
+  useEffect(() => { micReady().then((m) => { mic.current = m; if (m === 'ok') warmMic(); }); return () => { run.current.n++; run.current.ear?.stop(); hush(); }; }, []);
   const stopEar = () => { run.current.ear?.stop(); run.current.ear = null; setListening(false); };
   const choose = (k) => {
     // refs مش state: الدالة دي بتتنادي من السماع اللي بدأ في render قديم
