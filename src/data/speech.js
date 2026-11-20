@@ -79,6 +79,7 @@ export function allLines() {
   Object.values(RAMADAN_LINES).forEach((t) => L.add(t));
   qaidaLines().forEach((t) => L.add(t));
   tuhfaLines().forEach((t) => L.add(t));
+  ['يلا نحفظ! اختار سورة، والشيخ هيقرا كل آية وانت تعيد وراه.', 'ما شاء الله! حفظت السورة.', 'اختبر نفسك! قول الآيات من حفظك.'].forEach((t) => L.add(t));
   ASMAA.forEach((a) => L.add(asmaLine(a))); L.add(ASMAA_INTRO);
   HADITH.forEach((h) => { L.add(hadithLine(h)); L.add(hadithMean(h)); });
   L.add('دي أحاديث النبي صلى الله عليه وسلم. اختار حديث وأنا أقولهولك وأشرحهولك.');

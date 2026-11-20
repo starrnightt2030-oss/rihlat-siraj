@@ -15,6 +15,35 @@ function ReciterRow() {
   return (<><button type="button" onClick={() => setO(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '12px 4px', border: 0, background: 'transparent', fontFamily: 'inherit', fontSize: 17, fontWeight: 800, color: '#26336B', cursor: 'pointer' }}><span>القارئ ووضع المعلّم</span><span style={{ color: '#2A6FBB' }}>{reciterById(st.reciter).name}{st.teach ? ' · المعلّم' : ''} ‹</span></button><ReciterSheet open={o} onClose={() => setO(false)} /></>);
 }
 
+// تقرير الأسبوع: ملخص كل اللي الطفل اتعلمه، مع زرار مشاركة (واتساب مثلًا)
+function WeekReport({ s }) {
+  const t = new Date();
+  const week = Array.from({ length: 7 }, (_, k) => { const d = new Date(t.getFullYear(), t.getMonth(), t.getDate() - k); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; });
+  const active = week.filter((d) => (s.days || []).includes(d)).length;
+  let streak = 0; for (const d of week) { if ((s.days || []).includes(d)) streak++; else if (streak || d !== week[0]) break; }
+  const rows = [
+    ['📅', 'أيام دخل فيها الأسبوع ده', `${ar(active)} من ٧`],
+    ['🔥', 'أيام ورا بعض', ar(streak)],
+    ['🔤', 'دروس القاعدة النورانية', `${ar((s.qaida || []).length)} من ١٢`],
+    ['📖', 'سور حفظها (حفّظني)', ar((s.hifz || []).length)],
+    ['📜', 'أبواب تحفة الأطفال', `${ar((s.tuhfa || []).length)} من ١٠`],
+    ['💬', 'أحاديث حفظها', `${ar((s.hdone || []).length)} من ٤٠`],
+    ['✨', 'أسماء الله اللي عرفها', `${ar((s.asmaSeen || []).length)} من ٩٩`],
+    ['⭐', 'النجوم', ar(s.stars || 0)],
+  ];
+  const share = async () => {
+    const txt = `تقرير ${s.profile?.name || 'الطفل'} في رحلة سراج 🌟\n` + rows.map((r) => `${r[0]} ${r[1]}: ${r[2]}`).join('\n');
+    try { if (navigator.share) await navigator.share({ text: txt }); else { await navigator.clipboard.writeText(txt); alert('اتنسخ التقرير'); } } catch (e) {}
+  };
+  return (
+    <div className="card" style={{ position: 'relative', padding: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <h2 style={{ fontSize: 20, fontWeight: 800 }}>تقرير الأسبوع</h2>
+      {rows.map((r) => <div key={r[1]} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 0', borderBottom: '2px solid #F6F7FB', fontWeight: 700 }}><span>{r[0]} {r[1]}</span><span style={{ color: '#2D9C4A' }}>{r[2]}</span></div>)}
+      <button type="button" onClick={share} style={{ marginTop: 6, borderRadius: 16, padding: 12, border: 0, background: '#2FB383', color: '#fff', fontFamily: 'inherit', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>مشاركة التقرير</button>
+    </div>
+  );
+}
+
 export default function Parent({ go, back }) {
   const s = useStore();
   const [a, b] = useMemo(() => [3 + Math.floor(Math.random() * 6), 2 + Math.floor(Math.random() * 7)], []);
@@ -66,6 +95,7 @@ export default function Parent({ go, back }) {
               })}
             </div>
           </div>
+          <WeekReport s={s} />
           <div className="card" style={{ position: 'relative', padding: '4px 16px' }}>
             <Toggle k="sound" t="أصوات التطبيق" />
             <Toggle k="voice" t="صوت سراج (قراءة الكلام)" />

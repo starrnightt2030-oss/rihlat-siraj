@@ -18,6 +18,7 @@ import Bedtime from './screens/Bedtime';
 import Ramadan from './screens/Ramadan';
 import Qaida from './screens/Qaida';
 import Tuhfa from './screens/Tuhfa';
+import Hifz from './screens/Hifz';
 import People from './screens/People';
 import { TabBar } from './components/ui';
 import UpdatePrompt from './components/UpdatePrompt';
@@ -43,7 +44,7 @@ export default function App() {
   if (!profile && !['splash', 'onboard', 'parent'].includes(name)) name = 'splash';
   const tabs = ['home', 'island', 'stories', 'games', 'album'].includes(name) || (name === 'adhkar' && !arg);
   const P = { go, back, arg };
-  const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent, adhkar: Adhkar, home: Home, sec: Section, anbiya25: (p) => <People {...p} kind="anbiya" />, sahaba: (p) => <People {...p} kind="sahaba" />, hadith: Hadith, asmaa: Asmaa, bedtime: Bedtime, ramadan: Ramadan, qaida: Qaida, tuhfa: Tuhfa };
+  const screens = { splash: Splash, onboard: Onboard, island: Journey, unit: Unit, card: Card, album: Album, games: Games, stories: Stories, parent: Parent, adhkar: Adhkar, home: Home, sec: Section, anbiya25: (p) => <People {...p} kind="anbiya" />, sahaba: (p) => <People {...p} kind="sahaba" />, hadith: Hadith, asmaa: Asmaa, bedtime: Bedtime, ramadan: Ramadan, qaida: Qaida, tuhfa: Tuhfa, hifz: Hifz };
   const S = screens[name] || Journey;
 
   return (
