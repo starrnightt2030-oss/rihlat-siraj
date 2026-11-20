@@ -19,6 +19,7 @@ import { HUB } from '../data/speech';
 export const SECTIONS = [
   { id: 'salah', t: 'صلاتي ووضوئي', d: 'خطوة بخطوة بالصور', c: '#4A8FE0', bg: '#E6F0FF', art: { scene: 'salah' }, units: ['tahara', 'salah'] },
   { id: 'qaida', t: 'القاعدة النورانية', d: 'أتعلم الحروف وأقرا بنفسي', c: '#2C6BC4', bg: '#E6F0FF', art: { scene: 'abc' }, go: ['qaida'] },
+  { id: 'tuhfa', t: 'تحفة الأطفال', d: 'أحكام التجويد بالشعر والشرح', c: '#8C5A1F', bg: '#FFF3D6', emoji: '📜', go: ['tuhfa'] },
   { id: 'quran', t: 'قرآني', d: 'جزء عمّ كامل بصوت ٥ قرّاء', c: '#9B7BF2', bg: '#F1ECFF', art: { scene: 'books' }, units: ['quran', 'amma1', 'amma2', 'amma3'] },
   { id: 'stories', t: 'الحكايات', d: 'قصص الأنبياء والقرآن', c: '#3FA9F5', bg: '#E3F2FF', img: 'stickers/whale', go: ['stories'] },
   { id: 'anbiya25', t: 'الأنبياء الـ٢٥', d: 'كل نبي وحكايته ودرسه', c: '#1F7FC9', bg: '#E3F2FF', ic: 'star', emoji: '🕋', go: ['anbiya25'] },
