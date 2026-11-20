@@ -18,6 +18,7 @@
     "@capacitor/file-transfer": "^1.0.12",
     "@capacitor/filesystem": "^7.1.9",
     "@capacitor/local-notifications": "^7.0.7",
+    "@capacitor/share": "^7.0.4",
     "@capacitor/splash-screen": "^7.0.5",
     "@capacitor/status-bar": "^7.0.6",
     "@fontsource/amiri": "^5.3.0",
