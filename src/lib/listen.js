@@ -28,15 +28,34 @@ export const resetMicMode = () => { try { localStorage.removeItem(MODE_KEY); } c
 // طلب واحد بس في نفس الوقت: لو اتطلب الإذن تاني والأول لسه مفتوح، أندرويد ممكن ميردّش خالص
 let asking = null;
 export function micReady() { return asking || (asking = askMic().finally(() => { asking = null; })); }
+// كل خطوة ليها مهلة: لو الإضافة وقفت ومردّتش، مانفضلش مستنيين للأبد
+const within = (p, ms, label) => Promise.race([p, sleep(ms).then(() => { throw new Error('مهلة: ' + label); })]);
+// طريقة تانية لطلب إذن المايك: المتصفح اللي جوّه التطبيق بيطلب من أندرويد نفس الإذن (شباك «السماح بتسجيل الصوت؟»)
+async function askViaWebView() {
+  if (!navigator.mediaDevices?.getUserMedia) { log('المتصفح الداخلي مالوش طريقة للمايك'); return false; }
+  try {
+    const ms = await within(navigator.mediaDevices.getUserMedia({ audio: true }), 20000, 'إذن المتصفح');
+    ms.getTracks().forEach((t) => t.stop()); log('المتصفح الداخلي: الإذن اتاخد'); return true;
+  } catch (e) { log('المتصفح الداخلي: ' + (e?.name || '') + ' ' + (e?.message || e)); return false; }
+}
 async function askMic() {
   try {
     if (native) {
-      const p = await plugin();
-      let st = (await p.checkPermissions()).speechRecognition;
-      if (st !== 'granted') st = (await p.requestPermissions()).speechRecognition;
-      log('إذن المايك: ' + st);
-      if (st !== 'granted') return 'denied';
-      const { available } = await p.available();
+      log('بنجهّز المايك…');
+      const p = await within(plugin(), 5000, 'تحميل الإضافة');
+      let st = 'unknown';
+      try { st = (await within(p.checkPermissions(), 4000, 'فحص الإذن')).speechRecognition; } catch (e) { log(e.message); }
+      log('حالة الإذن: ' + st);
+      if (st !== 'granted') {
+        try { st = (await within(p.requestPermissions(), 8000, 'طلب الإذن')).speechRecognition; log('رد طلب الإذن: ' + st); } catch (e) { log(e.message); }
+      }
+      if (st !== 'granted' && await askViaWebView()) {
+        try { st = (await within(p.checkPermissions(), 4000, 'فحص الإذن')).speechRecognition; } catch (e) { st = 'granted?'; }
+        log('حالة الإذن بعد المتصفح: ' + st);
+      }
+      if (st !== 'granted' && st !== 'granted?') return 'denied';
+      let available = true;
+      try { available = (await within(p.available(), 4000, 'فحص خدمة الكلام')).available; } catch (e) { log(e.message); }
       log('خدمة الكلام: ' + (available ? 'موجودة' : 'مش موجودة'));
       return available ? 'ok' : 'none';
     }
