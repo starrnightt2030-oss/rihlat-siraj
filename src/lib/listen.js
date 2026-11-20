@@ -7,11 +7,14 @@
 // بنسأل المحرّك كل شوية «انت لسه سامع؟»: لو قفل والطفل لسه ما قالش حاجة نشغّله تاني على طول،
 // ولو قال كلام وسكت نخلّص.
 import { Capacitor } from '@capacitor/core';
+import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 
 const LANG = 'ar-SA'; // العربي الفصيح أقرب للتلاوة من العامية
 const native = Capacitor.isNativePlatform();
-let SR = null;
-const plugin = async () => SR || (SR = (await import('@capacitor-community/speech-recognition')).SpeechRecognition);
+// مهم: الإضافة بتتحمّل عادي فوق، وعمرها ما تترجع من دالة async أو Promise.
+// إضافات Capacitor «بروكسي» بيرد على أي اسم دالة، فلما الـ Promise بيدوّر على then جوّاها بيبعت طلب لأندرويد
+// مالوش رد، والكود بيفضل مستني للأبد (ده اللي كان موقّف المايك في الـ APK)
+const plugin = () => SpeechRecognition;
 const WebSR = typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // سجل صغير لآخر اللي حصل مع المايك، بيظهر في «اختبار المايك» عشان نعرف المشكلة فين على أي موبايل
@@ -42,7 +45,7 @@ async function askMic() {
   try {
     if (native) {
       log('بنجهّز المايك…');
-      const p = await within(plugin(), 5000, 'تحميل الإضافة');
+      const p = plugin();
       let st = 'unknown';
       try { st = (await within(p.checkPermissions(), 4000, 'فحص الإذن')).speechRecognition; } catch (e) { log(e.message); }
       log('حالة الإذن: ' + st);
@@ -78,7 +81,7 @@ export function hear({ onText, onFail, maxMs = 15000, waitMs = 7000 } = {}) {
 
   if (native) {
     (async () => {
-      const p = await plugin();
+      const p = plugin();
       if (ended) return;
       // شباك جوجل: بيسمع لحد ما الطفل يسكت وبيرجّع الكلام مرة واحدة
       const popup = async () => {
