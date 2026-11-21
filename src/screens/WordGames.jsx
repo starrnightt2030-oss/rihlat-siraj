@@ -168,7 +168,8 @@ export function WordSearch({ back, age }) {
   const T = THEMES[th % THEMES.length];
   const { g, place } = useMemo(() => makeGrid(shuffle(T.w).slice(0, cnt).sort((a, b) => b.length - a.length), n) || makeGrid(T.w.slice(0, 3), n), [seed, th]);
   const [found, setFound] = useState([]), [path, setPath] = useState([]), [flash, setFlash] = useState(null), [bad, setBad] = useState(false);
-  const drag = useRef(null), grid = useRef(null);
+  const drag = useRef(null), grid = useRef(null), pathRef = useRef([]);
+  pathRef.current = path;
   useEffect(() => { setFound([]); setPath([]); say('دوّر على الكلمات المستخبية!'); }, [seed, th]);
   const key = (y, x) => y + ',' + x;
   const isFound = (y, x) => place.some((p) => found.includes(p.w) && p.cells.some(([a, b]) => a === y && b === x));
@@ -182,7 +183,7 @@ export function WordSearch({ back, age }) {
   const check = (cells) => {
     const ks = cells.map(([y, x]) => key(y, x)).join('|');
     const hit = place.find((p) => !found.includes(p.w) && (p.cells.map(([y, x]) => key(y, x)).join('|') === ks || [...p.cells].reverse().map(([y, x]) => key(y, x)).join('|') === ks));
-    if (hit) { sfx.star(); setFound((f) => [...f, hit.w]); setFlash(hit.w); setPath([]); say('شاطر! إجابة صح'); return true; }
+    if (hit) { sfx.star(); setFound((f) => (f.includes(hit.w) ? f : [...f, hit.w])); setFlash(hit.w); setPath([]); say('شاطر! إجابة صح'); return true; }
     return false;
   };
   // الدوس: كل حرف بتدوس عليه بيكمّل الكلمة، ولو دوست على حرف مش على نفس الخط بنبدأ من عنده
@@ -207,15 +208,17 @@ export function WordSearch({ back, age }) {
     if (c[0] === d.start[0] && c[1] === d.start[1]) return;
     const l = line(d.start, c); if (!l) return;
     if (!d.moved) { d.moved = true; try { grid.current.setPointerCapture(e.pointerId); } catch (er) {} }
-    setPath(l);
+    setPath(l); pathRef.current = l;
   };
   const up = (e) => {
     const d = drag.current; drag.current = null; if (!d) return;
     if (!d.moved) { const c = cellAt(e) || d.start; tap(c[0], c[1]); return; }
-    setPath((cur) => { if (!check(cur)) { setBad(true); sfx.oops?.(); setTimeout(() => { setBad(false); setPath([]); }, 500); } return cur; });
+    // التحقق برّه دالة setState: React ممكن ينادي الدالة دي مرتين، فالكلمة كانت بتتحسب مرتين والعدّ يبوظ واللعبة ماتخلصش
+    const cur = pathRef.current; if (!check(cur)) { setBad(true); sfx.oops?.(); setTimeout(() => { setBad(false); setPath([]); }, 500); }
   };
   const inPath = (y, x) => path.some(([a, b]) => a === y && b === x);
-  const allDone = found.length === place.length;
+  // بنتأكد إن كل كلمة اتلقت (مش بالعدد بس)
+  const allDone = place.length > 0 && place.every((p) => found.includes(p.w));
   return (
     <div className="screen" style={{ gap: 12 }}>
       <Sky tone="mint" />
