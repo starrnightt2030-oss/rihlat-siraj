@@ -9,7 +9,9 @@ import './styles.css';
 import App from './App';
 import { back } from './lib/nav';
 import { startAwake } from './lib/awake';
+import { appReady } from './lib/update';
 startAwake();
+appReady();
 createRoot(document.getElementById('root')).render(<App />);
 
 // زرار الرجوع في أندرويد بيرجع خطوة، ومن الجزيرة بيقفل التطبيق

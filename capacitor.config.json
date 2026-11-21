@@ -18,6 +18,13 @@
     "LocalNotifications": {
       "smallIcon": "ic_stat_siraj",
       "iconColor": "#F5A623"
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "appReadyTimeout": 15000,
+      "resetWhenUpdate": true,
+      "statsUrl": "",
+      "responseTimeout": 30
     }
   }
 }
