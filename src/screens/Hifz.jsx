@@ -10,7 +10,7 @@ import { reciterById, ayahUrl } from '../data/reciters';
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush, hubSay } from '../lib/voice';
+import { say, hush, hubSay, leave } from '../lib/voice';
 import { HomeBtn } from '../components/ui';
 import Certificate from '../components/Certificate';
 import { micReady, hear, micLog, resetMicMode, warmMic } from '../lib/listen';
@@ -53,7 +53,7 @@ function Surah({ s, back }) {
   const [heard, setHeard] = useState(''), [hits, setHits] = useState({}), [note, setNote] = useState(null), [seen, setSeen] = useState({}), [mode, setMode] = useState(null), [res, setRes] = useState(null);
   const run = useRef({ n: 0, cur: null, ear: null });
   const stop = () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} run.current.ear?.stop(); setOn(-1); setTurn(false); setMode(null); setHeard(''); setNote(null); };
-  useEffect(() => { micReady().then((m) => { setMic(m); if (m === 'ok') warmMic(); }); return () => { stop(); hush(); }; }, []);
+  useEffect(() => { micReady().then((m) => { setMic(m); if (m === 'ok') warmMic(); }); return () => { stop(); leave(); }; }, []);
   // اختبار المايك: يسمع ٨ ثواني ويعرض اللي سمعه وإيه اللي حصل خطوة بخطوة (عشان نعرف المشكلة على أي موبايل)
   const [mt, setMt] = useState(null);
   const micTest = async () => {
@@ -245,7 +245,7 @@ function Review({ back }) {
   const run = useRef({ n: 0, cur: null, ear: null });
   const alive = (my) => run.current.n === my;
   const code = (s, k) => String(s).padStart(3, '0') + String(k + 1).padStart(3, '0');
-  useEffect(() => () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} run.current.ear?.stop(); hush(); }, []);
+  useEffect(() => () => { run.current.n++; try { run.current.cur?.pause(); } catch (e) {} run.current.ear?.stop(); leave(); }, []);
   const go = async () => {
     const my = ++run.current.n; const out = [];
     await say(REVIEW_LINES[0]);
@@ -348,7 +348,7 @@ function Review({ back }) {
 
 export default function Hifz({ arg, back, go, swap }) {
   const done = useStore((x) => x.hifz) || [];
-  useEffect(() => { if (!arg) hubSay(HIFZ_INTRO); return () => hush(); }, [arg]);
+  useEffect(() => { if (!arg) hubSay(HIFZ_INTRO); return () => leave(); }, [arg]);
   if (arg === 'test') return <Review back={back} />;
   if (arg && Q30[arg]) return <Surah key={arg} s={+arg} back={back} />;
   return (

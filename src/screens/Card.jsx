@@ -8,7 +8,7 @@ import { cardById, ALL_CARDS } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush, recite, onAyah } from '../lib/voice';
+import { say, hush, recite, onAyah, leave } from '../lib/voice';
 import { stepLine, stepPost } from '../data/speech';
 import Q30 from '../data/quran30.json';
 import Art from '../art';
@@ -44,7 +44,7 @@ export default function Card({ arg, go, back, swap }) {
   const locked = phase === 'learn' && PRACTICE.has(step.k) && !solved;
   const total = c.steps.length + 1;
   const pos = phase === 'learn' ? i + 1 : total;
-  useEffect(() => () => hush(), []);
+  useEffect(() => () => leave(), []);
   const first = useRef(true);
   useEffect(() => { const c0 = cont && first.current && step.k === 'surah'; first.current = false; if (c0) recite(audOf(step)); else if (phase === 'learn') speak(step); else if (phase === 'quiz') say(c.quiz.uth ? 'كمّل الآية دي!' : c.quiz.q); }, [i, phase]);
 

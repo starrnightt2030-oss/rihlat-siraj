@@ -8,7 +8,7 @@ import { useStore } from '../store';
 import DIcon from '../art/Icons';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hubSay, hush } from '../lib/voice';
+import { say, hubSay, hush, leave } from '../lib/voice';
 import { HUB } from '../data/speech';
 import { OrderGame, FillGame, MatchGame } from './LearnGames';
 import { Duel, TrueFalse, Riddle, QuizChallenge } from './Arena';
@@ -87,7 +87,7 @@ export default function Games({ arg, go, back }) {
   if (arg === 'order') return <OrderGame age={age} back={back} />;
   if (arg === 'fill') return <FillGame back={back} />;
   if (arg === 'match') return <MatchGame age={age} back={back} />;
-  useEffect(() => { hubSay(HUB.games); return () => hush(); }, []);
+  useEffect(() => { hubSay(HUB.games); return () => leave(); }, []);
   return (
     <div className="screen with-nav" style={{ gap: 14 }}>
       <Sky tone="lilac" />

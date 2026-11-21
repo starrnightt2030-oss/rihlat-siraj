@@ -7,7 +7,7 @@ import { TUHFA, verseLine, TUHFA_INTRO, TUHFA_Q, tuhfaQuiz } from '../data/tuhfa
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush, hubSay } from '../lib/voice';
+import { say, hush, hubSay, leave } from '../lib/voice';
 import { HomeBtn } from '../components/ui';
 import SyncSong, { Fill } from '../components/SyncSong';
 import { TUHFA_SONG } from '../data/tuhfaSong';
@@ -82,7 +82,7 @@ function Bab({ b, i, back, next, go }) {
   // دوس على أي مثال: الشيخ يقراه لوحده
   const tapEx = async (e, id, w) => { e.stopPropagation(); if (!exUrl(w)) return; run.current++; hush(); setCur(null); setExOn(id + w); await playEx(w); setExOn((x) => (x === id + w ? null : x)); };
   const reg = (id) => (el) => { refs.current[id] = el; };
-  useEffect(() => { const t = setTimeout(() => playFrom(0), 450); return () => { clearTimeout(t); run.current++; hush(); stopEx(); }; }, [b.id]);
+  useEffect(() => { const t = setTimeout(() => playFrom(0), 450); return () => { clearTimeout(t); run.current++; leave(); stopEx(); }; }, [b.id]);
   const ok = hifz.includes(b.id);
   return (
     <div className="screen" style={{ gap: 12 }}>
@@ -175,7 +175,7 @@ function TuhfaSong({ back, from }) {
 export default function Tuhfa({ arg, back, go, swap }) {
   const hifz = useStore((s) => s.tuhfa) || [];
   const i = TUHFA.findIndex((b) => b.id === arg);
-  useEffect(() => { if (i < 0 && !(arg || '').startsWith('song')) hubSay(TUHFA_INTRO); return () => hush(); }, [i, arg]);
+  useEffect(() => { if (i < 0 && !(arg || '').startsWith('song')) hubSay(TUHFA_INTRO); return () => leave(); }, [i, arg]);
   if (arg && arg.startsWith('song')) return <TuhfaSong key={arg} back={back} from={arg.split('/')[1]} />;
   if (i >= 0) return <Bab key={arg} b={TUHFA[i]} i={i} back={back} go={go} next={TUHFA[i + 1] ? () => swap('tuhfa', TUHFA[i + 1].id) : null} />;
   return (

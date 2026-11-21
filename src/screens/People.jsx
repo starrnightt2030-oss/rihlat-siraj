@@ -10,7 +10,7 @@ import { PROPHETS, SAHABA } from '../data/people';
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush } from '../lib/voice';
+import { say, hush, leave } from '../lib/voice';
 
 export const quizQ = (p, kind) => (kind === 'anbiya' ? 'مين النبي ده؟ ' : 'مين الصحابي ده؟ ') + p.who.split('،')[0].split('.')[0];
 export const peopleLine = (p, kind) => (kind === 'anbiya' ? 'سيدنا ' + p.n.replace(' ﷺ', ' صلى الله عليه وسلم') + '. ' : p.n + '، ' + p.lq + '. ') + p.who + ' ' + p.story + ' الدرس: ' + p.lesson;
@@ -33,7 +33,7 @@ export default function People({ arg, go, back, kind }) {
 
 function List({ kind, go, back }) {
   const K = KIND[kind];
-  useEffect(() => { say(K.intro); return () => hush(); }, []);
+  useEffect(() => { say(K.intro); return () => leave(); }, []);
   return (
     <div className="screen" style={{ gap: 12 }}>
       <Sky />
@@ -65,7 +65,7 @@ function List({ kind, go, back }) {
 function Detail({ p, kind, go, back }) {
   const K = KIND[kind]; const L = K.list; const i = L.indexOf(p);
   const seeProphet = useStore((s) => s.seeProphet);
-  useEffect(() => { say(peopleLine(p, kind), p.aud ? [].concat(p.aud) : []); if (kind === 'anbiya') seeProphet(p.id); return () => hush(); }, [p.id]);
+  useEffect(() => { say(peopleLine(p, kind), p.aud ? [].concat(p.aud) : []); if (kind === 'anbiya') seeProphet(p.id); return () => leave(); }, [p.id]);
   const nav = (d) => { const q = L[(i + d + L.length) % L.length]; sfx.whoosh(); go(kind === 'anbiya' ? 'anbiya25' : 'sahaba', q.id); };
   const Sec = ({ t, c, children }) => (
     <div className="card" style={{ padding: '10px 14px', borderRight: `6px solid ${c}` }}>

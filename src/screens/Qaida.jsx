@@ -7,7 +7,7 @@ import { QAIDA, QAIDA_INTRO, QAIDA_ASK, QAIDA_DONE } from '../data/qaida';
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush, hubSay } from '../lib/voice';
+import { say, hush, hubSay, leave } from '../lib/voice';
 import { HomeBtn } from '../components/ui';
 
 const Back = ({ onClick }) => (
@@ -25,7 +25,7 @@ function Lesson({ l, back, next }) {
   useEffect(() => {
     const my = ++playing.current;
     const t = setTimeout(async () => { await say(l.intro); if (playing.current === my) { await new Promise((r) => setTimeout(r, 400)); if (playing.current === my) playAll(); } }, 400);
-    return () => { clearTimeout(t); playing.current++; hush(); };
+    return () => { clearTimeout(t); playing.current++; leave(); };
   }, [l.id]);
   const tap = (k) => { playing.current++; sfx.tap(); setOn(k); say(l.tiles[k].s); };
   const playAll = async () => {
@@ -104,7 +104,7 @@ function Lesson({ l, back, next }) {
 export default function Qaida({ arg, back, go, swap }) {
   const done = useStore((s) => s.qaida) || [];
   const idx = QAIDA.findIndex((l) => l.id === arg);
-  useEffect(() => { if (idx < 0) hubSay(QAIDA_INTRO); return () => hush(); }, [idx]);
+  useEffect(() => { if (idx < 0) hubSay(QAIDA_INTRO); return () => leave(); }, [idx]);
   if (idx >= 0) return <Lesson key={arg} l={QAIDA[idx]} back={back} next={QAIDA[idx + 1] ? () => swap('qaida', QAIDA[idx + 1].id) : null} />;
   return (
     <div className="screen" style={{ gap: 12 }}>

@@ -8,7 +8,7 @@ import { ASMAA, asmaLine, ASMAA_INTRO } from '../data/asmaa';
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush, hubSay } from '../lib/voice';
+import { say, hush, hubSay, leave } from '../lib/voice';
 import SyncSong, { Fill } from '../components/SyncSong';
 import { HomeBtn } from '../components/ui';
 import { ASMAA_SONGS } from '../data/asmaaSong';
@@ -66,7 +66,7 @@ function AsmaaGrid({ back, go }) {
   const [open, setOpen] = useState(null);
   useEffect(() => {
     hubSay(ASMAA_INTRO);
-    return () => { hush(); };
+    return () => { leave(); };
   }, []);
   const show = (a) => { sfx.pop(); setOpen(a); see(a.k); say(asmaLine(a)); };
   return (

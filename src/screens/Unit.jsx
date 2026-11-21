@@ -6,13 +6,13 @@ import { unitById, UNITS, isOpen } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hubSay, hush } from '../lib/voice';
+import { say, hubSay, hush, leave } from '../lib/voice';
 
 export default function Unit({ arg, go, back }) {
   const u = unitById(arg) || UNITS[0];
   const done = useStore((s) => s.done);
   const n = u.cards.filter((c) => c.id in done).length;
-  useEffect(() => { hubSay(u.sub); return () => hush(); }, [u.id]);
+  useEffect(() => { hubSay(u.sub); return () => leave(); }, [u.id]);
   return (
     <div className="screen" style={{ padding: 0, background: '#FFF7E8' }}>
       <div style={{ position: 'relative', flexShrink: 0, minHeight: 250, padding: 'calc(var(--safe-top) + 14px) 16px 18px', background: `linear-gradient(180deg, ${u.color}, ${u.dark})`, borderRadius: '0 0 40px 40px', color: '#fff', overflow: 'hidden' }}>

@@ -9,7 +9,7 @@ import { UNITS, ALL_CARDS, isOpen, nextCard } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hubSay, hush } from '../lib/voice';
+import { say, hubSay, hush, leave } from '../lib/voice';
 import { HUB } from '../data/speech';
 
 const ZIG = [0, 78, 0, -78];
@@ -17,7 +17,7 @@ const ZIG = [0, 78, 0, -78];
 export default function Journey({ go }) {
   const { profile, done, stars, light, days, gift, visit, takeGift } = useStore();
   const d0 = today();
-  useEffect(() => { visit(d0); hubSay(HUB.island); return () => hush(); }, []);
+  useEffect(() => { visit(d0); hubSay(HUB.island); return () => leave(); }, []);
   const streak = (() => { let n = 0; const t = new Date(); for (;;) { const d = new Date(t.getFullYear(), t.getMonth(), t.getDate() - n); if (days.includes(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`) || n === 0) n++; else break; if (n > 365) break; } return n; })();
   const cur = nextCard(done);
   const curRef = useRef(null);

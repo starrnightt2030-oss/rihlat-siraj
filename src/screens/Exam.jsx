@@ -13,7 +13,7 @@ import { useStore } from '../store';
 import { ALL_CATS, LEVELS, pickQs, matchOption, EXAM_INTRO, EXAM_AGAIN } from '../data/questions';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush } from '../lib/voice';
+import { say, hush, leave } from '../lib/voice';
 import { micReady, hear, warmMic } from '../lib/listen';
 
 const PASS = 60;
@@ -29,7 +29,7 @@ function Quiz({ cat, lv, back, done }) {
   const [i, setI] = useState(0), [score, setScore] = useState(0), [pick, setPick] = useState(null), [heard, setHeard] = useState(''), [listening, setListening] = useState(false), [msg, setMsg] = useState('');
   const run = useRef({ n: 0, ear: null }), mic = useRef('unk'), picked = useRef(false), scoreR = useRef(0), qR = useRef(null);
   const q = qs[i]; qR.current = q;
-  useEffect(() => { micReady().then((m) => { mic.current = m; if (m === 'ok') warmMic(); }); return () => { run.current.n++; run.current.ear?.stop(); hush(); }; }, []);
+  useEffect(() => { micReady().then((m) => { mic.current = m; if (m === 'ok') warmMic(); }); return () => { run.current.n++; run.current.ear?.stop(); leave(); }; }, []);
   const stopEar = () => { run.current.ear?.stop(); run.current.ear = null; setListening(false); };
   const choose = (k) => {
     // refs مش state: الدالة دي بتتنادي من السماع اللي بدأ في render قديم
@@ -100,7 +100,7 @@ export default function Exam({ back }) {
   const [cat, setCat] = useState(null), [lv, setLv] = useState(null), [res, setRes] = useState(null), [cert, setCert] = useState(false), [key, setKey] = useState(0);
   const cats = Object.keys(ALL_CATS), passed = cats.filter((c) => bestOf(exam[c]) >= PASS);
   const all = passed.length === cats.length, avg = Math.round(cats.reduce((s, c) => s + bestOf(exam[c]), 0) / cats.length);
-  useEffect(() => { if (!cat) say(EXAM_INTRO); return () => hush(); }, []);
+  useEffect(() => { if (!cat) say(EXAM_INTRO); return () => leave(); }, []);
   if (cat && lv && !res) return <Quiz key={key} cat={cat} lv={lv} back={() => { hush(); setLv(null); }} done={(p) => { examScore(cat, lv, p); setRes(p); }} />;
   if (res !== null) {
     const [g, gc] = grade(res), nowAll = Object.keys(ALL_CATS).every((c) => (c === cat ? Math.max(res, bestOf(exam[c])) : bestOf(exam[c])) >= PASS);

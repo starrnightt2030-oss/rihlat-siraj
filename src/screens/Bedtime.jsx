@@ -7,7 +7,7 @@ import { BEDTIME, BED_INTRO, BED_MORAL, BED_END } from '../data/bedtime';
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush } from '../lib/voice';
+import { say, hush, leave } from '../lib/voice';
 
 const STARS = Array.from({ length: 40 }, (_, i) => { const r = (n) => { const v = Math.sin(n * 91.7 + i * 13.3) * 43758.5; return v - Math.floor(v); }; return { x: r(1) * 100, y: r(2) * 70, s: 1.5 + r(3) * 2.5, d: r(4) * 3 }; });
 const BG = 'linear-gradient(180deg, #2E2A6E 0%, #4B3F99 55%, #7A63B8 100%)';
@@ -84,7 +84,7 @@ function Player({ start, timer, back }) {
     if (!live()) return;
     setEnd(true); await speak(BED_END[g]);
   };
-  useEffect(() => { go(start, -1); return () => { run.current++; hush(); }; }, []);
+  useEffect(() => { go(start, -1); return () => { run.current++; leave(); }; }, []);
   const pause = () => { if (paused) { setPaused(false); go(pos.current.si, pos.current.k); } else { run.current++; hush(); setPaused(true); } };
   const nextStory = () => { const n = (si + 1) % BEDTIME.length; run.current++; hush(); setPaused(false); setSi(n); setK(0); go(n, 0); };
   const scene = st.s[Math.min(Math.max(k, 0), st.s.length - 1)];

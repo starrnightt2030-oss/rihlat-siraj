@@ -13,7 +13,7 @@ import { today } from '../data/gifts';
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush } from '../lib/voice';
+import { say, hush, leave } from '../lib/voice';
 
 const buzz = (ms = 12) => { try { navigator.vibrate?.(ms); } catch { /* مش مدعوم */ } };
 const doneToday = (z) => (z && z.d === today() ? z : { ids: [], secs: [] });
@@ -21,7 +21,7 @@ const doneToday = (z) => (z && z.d === today() ? z : { ids: [], secs: [] });
 const nowSec = () => { const h = new Date().getHours(); return h >= 4 && h < 12 ? 'sabah' : h >= 15 && h < 21 ? 'masa' : h >= 21 || h < 4 ? 'nawm' : null; };
 
 export default function Adhkar({ arg, go, back }) {
-  useEffect(() => () => hush(), []);
+  useEffect(() => () => leave(), []);
   if (arg === 'tasbih') return <Tasbih back={back} />;
   if (arg === 'quiz') return <Quiz back={back} go={go} />;
   if (arg && adhkarById(arg)) return <Section sec={adhkarById(arg)} back={back} go={go} />;

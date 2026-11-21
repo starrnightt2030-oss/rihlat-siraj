@@ -28,7 +28,7 @@ import { TurnBadge } from './components/Reciter';
 import { BadgeWatcher } from './components/Badges';
 import { syncReminders } from './lib/remind';
 import { unlockAudio } from './lib/sound';
-import { hush } from './lib/voice';
+import { hush, navMark } from './lib/voice';
 import { track, go, swap, back, home } from './lib/nav';
 
 // تنقّل بسيط بالـ hash عشان زرار الرجوع في الموبايل يشتغل
@@ -38,7 +38,7 @@ export default function App() {
   const [route, setRoute] = useState(parse);
   const profile = useStore((s) => s.profile);
   const motionOn = useStore((s) => s.settings.motion);
-  useEffect(() => { const f = () => { track(); hush(); setRoute(parse()); }; addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
+  useEffect(() => { const f = () => { track(); navMark(); hush(); setRoute(parse()); }; addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   useEffect(() => { const f = () => unlockAudio(); addEventListener('pointerdown', f, { once: true }); }, []);
 
   let { name, arg } = route;

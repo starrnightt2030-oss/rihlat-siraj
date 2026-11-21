@@ -11,13 +11,13 @@ import { cardById } from '../data/units';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush , hubSay } from '../lib/voice';
+import { say, hush , hubSay, leave } from '../lib/voice';
 import { HUB } from '../data/speech';
 
 export default function Stories({ arg, go, back }) {
   if (arg && STORIES[arg]) return <Player id={arg} go={go} back={back} />;
   const done = useStore((s) => s.done);
-  useEffect(() => { hubSay(HUB.stories); return () => hush(); }, []);
+  useEffect(() => { hubSay(HUB.stories); return () => leave(); }, []);
   return (
     <div className="screen with-nav" style={{ gap: 14 }}>
       <Sky />
@@ -71,7 +71,7 @@ function Player({ id, go, back }) {
   const cu = cardById(id)?.unit; const region = cu ? { name: cu.title } : { name: 'بحر الحكايات' };
   const line = choice ? choice.res : sc.t;
   useEffect(() => { if (phase === 'story') say(choice ? choice.res : sc.t, !choice && sc.aud ? [].concat(sc.aud) : []); if (phase === 'moral') say(S.moral); if (phase === 'quiz') say(S.quiz[q].q); }, [i, phase, choice, q]);
-  useEffect(() => () => hush(), []);
+  useEffect(() => () => leave(), []);
 
   const next = () => {
     sfx.whoosh();

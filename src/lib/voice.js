@@ -55,6 +55,11 @@ function playList(urls, my) {
   // لو المتصفح منع الصوت قبل أول لمسة، بنشغّله أول ما الطفل يلمس الشاشة
   a.play().catch((e) => { if (e && e.name === 'NotAllowedError') window.addEventListener('pointerdown', () => { if (my === token) a.play().catch(() => {}); }, { once: true }); });
 }
+// الشاشة اللي بتقفل بتفضل ظاهرة شوية وهي بتتحرك لبرّه، وقفلتها كانت بتسكّت كلام الشاشة الجديدة بعد كلمة واحدة.
+// leave(): الشاشة اللي خارجة تسكّت الصوت بس لو الصوت ده بتاعها (بدأ قبل التنقّل)، مش صوت الشاشة الجديدة.
+let navAt = 0, sayAt = -1;
+export const navMark = () => { navAt = performance.now(); };
+export function leave() { if (sayAt <= navAt) hush(); }
 export function hush() { done(); ayahNow(null); token++; clearTimeout(timer); rest = null; turn(null); try { el?.pause(); } catch (e) {} try { window.speechSynthesis?.cancel(); } catch (e) {} }
 // يتخطى وقت الترديد ويكمّل
 let rest = null;
@@ -69,7 +74,7 @@ const ayatOf = (codes, st) => {
 export function say(text, after = [], post = '', opts = {}) {
   if (man === null) { const my0 = ++token; return ready.then(() => (token === my0 ? say(text, after, post, opts) : undefined)); }
   const st = useStore.getState().settings;
-  hush(); const my = token;
+  hush(); const my = token; sayAt = performance.now();
   const p = new Promise((r) => { finish = r; });
   speak(text, after, st, my, post, opts);
   return p;
@@ -106,5 +111,6 @@ export const recite = (codes) => say('', codes);
 const heard = new Set();
 export function hubSay(line, once = false, opts = {}) {
   if (!line || (once && heard.has(line))) return;
-  heard.add(line); setTimeout(() => say(line, [], '', opts), 350);
+  // لو الطفل خرج من الشاشة قبل ما الجملة تبدأ، ماتتقالش في الشاشة اللي بعدها، ولو حاجة في الشاشة بتتكلم (زي الهدية) مانقطعهاش
+  heard.add(line); const h = location.hash; setTimeout(() => { if (location.hash === h && !(finish && sayAt > navAt)) say(line, [], '', opts); }, 350);
 }

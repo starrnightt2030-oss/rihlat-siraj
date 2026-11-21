@@ -9,7 +9,7 @@ import { H_CATS, HADITH, hadithById, hadithLine, hadithMean } from '../data/hadi
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush, hubSay } from '../lib/voice';
+import { say, hush, hubSay, leave } from '../lib/voice';
 import { swap } from '../lib/nav';
 
 export const HADITH_INTRO = 'دي أحاديث النبي صلى الله عليه وسلم. اختار حديث وأنا أقولهولك وأشرحهولك.';
@@ -23,7 +23,7 @@ export default function Hadith({ arg, back, go }) {
 function List({ go, back }) {
   const hdone = useStore((s) => s.hdone) || [];
   const [cat, setCat] = useState('all');
-  useEffect(() => { hubSay(HADITH_INTRO); return () => hush(); }, []);
+  useEffect(() => { hubSay(HADITH_INTRO); return () => leave(); }, []);
   const list = cat === 'all' ? HADITH : HADITH.filter((x) => x.cat === cat);
   return (
     <div className="screen" style={{ gap: 12 }}>
@@ -69,7 +69,7 @@ function Detail({ h, back, go }) {
   const opts = useMemo(() => (h.id.charCodeAt(2) % 2 ? [h.q[1][1], h.q[1][0]] : h.q[1]), [h.id]);
   const right = h.q[1][0];
   const play = () => say(hadithLine(h), [], hadithMean(h));
-  useEffect(() => { const t = setTimeout(play, 400); return () => { clearTimeout(t); hush(); }; }, [h.id]);
+  useEffect(() => { const t = setTimeout(play, 400); return () => { clearTimeout(t); leave(); }; }, [h.id]);
   const i = HADITH.indexOf(h), nx = HADITH[(i + 1) % HADITH.length];
   return (
     <div className="screen" style={{ gap: 12 }}>

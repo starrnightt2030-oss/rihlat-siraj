@@ -7,7 +7,7 @@ import { Confetti } from '../components/Reward';
 import { useStore } from '../store';
 import { ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hush, hubSay } from '../lib/voice';
+import { say, hush, hubSay, leave } from '../lib/voice';
 import { TASKS, RAMADAN_LINES } from '../data/ramadan.js';
 
 const HF = (() => { try { return new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', { day: 'numeric', month: 'numeric', year: 'numeric' }); } catch { return null; } })();
@@ -47,7 +47,7 @@ export default function Ramadan({ back, go }) {
   const inRamadan = h?.m === 9, isEid = h?.m === 10 && h.d <= 3;
   const toR = !inRamadan ? nextHijri(9, 1) : null, toEid = nextHijri(10, 1);
   const lit = Object.values(rdays).filter((l) => l.length >= 4).length;
-  useEffect(() => { hubSay(RAMADAN_LINES.intro); return () => hush(); }, []);
+  useEffect(() => { hubSay(RAMADAN_LINES.intro); return () => leave(); }, []);
   const tap = (t) => {
     const on = !done.includes(t.id); setTask(key, t.id);
     if (on) { sfx.star(); if (done.length + 1 === TASKS.length) say(RAMADAN_LINES.full); } else sfx.tap();

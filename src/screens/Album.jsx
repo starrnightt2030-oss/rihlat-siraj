@@ -7,14 +7,14 @@ import { SPARKS, STICKERS, STICKER_NAMES } from '../data/content';
 import { useStore } from '../store';
 import { A, ar } from '../lib/asset';
 import { sfx } from '../lib/sound';
-import { say, hubSay, hush } from '../lib/voice';
+import { say, hubSay, hush, leave } from '../lib/voice';
 import { HUB } from '../data/speech';
 
 export default function Album() {
   const { light, stars, sparks, stickers, done } = useStore();
   const medals = [{ n: 1, img: 'rewards/medal_bronze', t: 'أول درس' }, { n: 4, img: 'rewards/medal_silver', t: '٤ دروس' }, { n: 8, img: 'rewards/medal_gold', t: '٨ دروس' }];
   const count = Object.keys(done).length;
-  useEffect(() => { hubSay(HUB.album); return () => hush(); }, []);
+  useEffect(() => { hubSay(HUB.album); return () => leave(); }, []);
   return (
     <div className="screen with-nav" style={{ gap: 16 }}>
       <Sky tone="warm" />
